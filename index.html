@@ -1,233 +1,258 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quay Video Thi Đấu</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  #camera-container {
-    position: relative;
-    max-width: 320px;
-    aspect-ratio: 16/9;
-    background: #000;
-    margin-top: 10px;
-  }
-  video, canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  #scoreboard {
-    margin-top: 8px;
-    text-align: center;
-    background: rgba(0,123,255,0.6);
-    border-radius: 8px;
-    padding: 6px 12px;
-    display: inline-block;
-  }
-  .team-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 4px 0;
-  }
-  .team-name {
-    font-weight: bold;
-  }
-  .serve-dots {
-    color: red;
-    font-size: 18px;
-    margin-left: 4px;
-  }
-  #tournament-name {
-    margin-top: 4px;
-    font-size: 14px;
-    font-style: italic;
-  }
-  #controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
-    margin: 10px 0;
-  }
-  #controls button, input {
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
-    background: #444;
-    color: white;
-    flex: 1 0 45%;
-    max-width: 120px;
-  }
-  #controls button:active {
-    background: #666;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Quay video giải đấu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+    }
+
+    /* Camera box */
+    .camera-box {
+      max-width: 320px;
+      aspect-ratio: 16 / 9;
+      background: black;
+      position: relative;
+      flex-shrink: 0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    video, canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      text-align: center;
+      background: rgba(0, 100, 200, 0.5);
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    .teams {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 4px;
+    }
+
+    .team {
+      flex: 1;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .serve-dots {
+      color: red;
+      margin-left: 4px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-wrap: nowrap;
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+
+    .controls button {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 60px;
+    }
+
+    .controls button:active {
+      background: #555;
+    }
+
+    @media (orientation: portrait) {
+      .container {
+        flex-direction: column;
+      }
+      .controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <!-- Camera & Scoreboard -->
+    <div class="camera-box">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="scoreboard">
+        <div id="tournament">Giải đấu ABC</div>
+        <div id="score">0 - 0</div>
+        <div class="teams">
+          <div id="team1">Đội A <span class="serve-dots" id="dots1"></span></div>
+          <div id="team2">Đội B <span class="serve-dots" id="dots2"></span></div>
+        </div>
+      </div>
+    </div>
 
-<h2>Quay Video Thi Đấu</h2>
-
-<div id="camera-container">
-  <video id="video" autoplay playsinline muted></video>
-  <canvas id="overlay"></canvas>
-</div>
-
-<div id="scoreboard">
-  <div class="team-row">
-    <span class="team-name" id="team1-name">Đội 1</span>
-    <span class="serve-dots" id="team1-serve"></span>
-    <span id="team1-score">0</span>
+    <!-- Controls -->
+    <div class="controls">
+      <button id="startBtn">▶ Ghi</button>
+      <button id="stopBtn" disabled>⏹ Dừng</button>
+      <button id="photoBtn">📸 Ảnh</button>
+      <button id="saveBtn" disabled>💾 Lưu</button>
+      <button onclick="changeScore(1,1)">+ Điểm A</button>
+      <button onclick="changeScore(1,-1)">- Điểm A</button>
+      <button onclick="changeScore(2,1)">+ Điểm B</button>
+      <button onclick="changeScore(2,-1)">- Điểm B</button>
+      <button onclick="chooseServe(1)">Giao A</button>
+      <button onclick="chooseServe(2)">Giao B</button>
+      <button onclick="adjustServe(1,1)">+ Lượt A</button>
+      <button onclick="adjustServe(1,-1)">- Lượt A</button>
+      <button onclick="adjustServe(2,1)">+ Lượt B</button>
+      <button onclick="adjustServe(2,-1)">- Lượt B</button>
+    </div>
   </div>
-  <div class="team-row">
-    <span class="team-name" id="team2-name">Đội 2</span>
-    <span class="serve-dots" id="team2-serve"></span>
-    <span id="team2-score">0</span>
-  </div>
-</div>
-<div id="tournament-name">Tên giải đấu</div>
 
-<div id="controls">
-  <input type="text" id="tournamentInput" placeholder="Nhập tên giải đấu">
-  <input type="text" id="team1Input" placeholder="Tên đội 1">
-  <input type="text" id="team2Input" placeholder="Tên đội 2">
-  <button onclick="setNames()">Đặt tên</button>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const photoBtn = document.getElementById("photoBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const scoreEl = document.getElementById("score");
+    const dots1 = document.getElementById("dots1");
+    const dots2 = document.getElementById("dots2");
 
-  <button onclick="changeScore('team1',1)">+ Điểm Đội 1</button>
-  <button onclick="changeScore('team1',-1)">- Điểm Đội 1</button>
-  <button onclick="changeScore('team2',1)">+ Điểm Đội 2</button>
-  <button onclick="changeScore('team2',-1)">- Điểm Đội 2</button>
+    let mediaRecorder;
+    let recordedChunks = [];
+    let score = [0, 0];
+    let serve = [0, 0]; // lượt giao
 
-  <button onclick="setServe('team1')">Chọn giao Đội 1</button>
-  <button onclick="setServe('team2')">Chọn giao Đội 2</button>
-  <button onclick="adjustServe('team1',-1)">- Lượt Đội 1</button>
-  <button onclick="adjustServe('team2',-1)">- Lượt Đội 2</button>
-  <button onclick="adjustServe('team1',+1)">+ Lượt Đội 1</button>
-  <button onclick="adjustServe('team2',+1)">+ Lượt Đội 2</button>
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true
+        });
+        video.srcObject = stream;
+        canvas.width = video.clientWidth;
+        canvas.height = video.clientHeight;
+        drawLoop();
+      } catch (err) {
+        console.error("Camera error:", err);
+      }
+    }
 
-  <button onclick="startRecording()">Bắt đầu Ghi</button>
-  <button onclick="stopRecording()">Dừng & Tải</button>
-  <button onclick="takeSnapshot()">Chụp Ảnh</button>
-</div>
+    function drawLoop() {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-<script>
-let team1Score=0, team2Score=0;
-let serve={team1:0, team2:0};
-let stream, mediaRecorder, recordedChunks=[];
-let overlay=document.getElementById("overlay");
-let ctx=overlay.getContext("2d");
-let startTime=null;
-let timerInterval=null;
+      // Đồng hồ
+      const now = new Date();
+      const timeStr = now.getMinutes().toString().padStart(2,"0") + ":" + now.getSeconds().toString().padStart(2,"0");
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText(timeStr, canvas.width - 60, 30);
 
-async function initCamera() {
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: {exact: "environment"},
-      width: {ideal:1280},
-      height: {ideal:720}
-    },
-    audio: true
-  });
-  document.getElementById("video").srcObject=stream;
-  overlay.width=320;
-  overlay.height=overlay.width*9/16;
-}
-initCamera();
+      requestAnimationFrame(drawLoop);
+    }
 
-function drawOverlay(){
-  ctx.clearRect(0,0,overlay.width,overlay.height);
-  let elapsed=Math.floor((Date.now()-startTime)/1000);
-  let min=Math.floor(elapsed/60);
-  let sec=elapsed%60;
-  ctx.fillStyle="white";
-  ctx.font="16px Arial";
-  ctx.fillText(`${min}:${sec.toString().padStart(2,"0")}`, overlay.width-60, 20);
-}
+    function changeScore(team, delta) {
+      score[team-1] = Math.max(0, score[team-1] + delta);
+      scoreEl.textContent = `${score[0]} - ${score[1]}`;
+    }
 
-function updateUI(){
-  document.getElementById("team1-score").innerText=team1Score;
-  document.getElementById("team2-score").innerText=team2Score;
-  document.getElementById("team1-serve").innerText=".".repeat(serve.team1);
-  document.getElementById("team2-serve").innerText=".".repeat(serve.team2);
-}
+    function chooseServe(team) {
+      serve = [0, 0];
+      serve[team-1] = 1;
+      updateServeDots();
+    }
 
-function changeScore(team,delta){
-  if(team==="team1"){team1Score=Math.max(0,team1Score+delta);}
-  else{team2Score=Math.max(0,team2Score+delta);}
-  updateUI();
-}
+    function adjustServe(team, delta) {
+      serve[team-1] = Math.max(0, Math.min(2, serve[team-1] + delta));
+      updateServeDots();
+    }
 
-function setNames(){
-  document.getElementById("tournament-name").innerText=document.getElementById("tournamentInput").value||"Tên giải đấu";
-  document.getElementById("team1-name").innerText=document.getElementById("team1Input").value||"Đội 1";
-  document.getElementById("team2-name").innerText=document.getElementById("team2Input").value||"Đội 2";
-}
+    function updateServeDots() {
+      dots1.textContent = "•".repeat(serve[0]);
+      dots2.textContent = "•".repeat(serve[1]);
+    }
 
-function setServe(team){
-  serve.team1=0; serve.team2=0;
-  serve[team]=1; 
-  updateUI();
-}
+    startBtn.onclick = () => {
+      const stream = canvas.captureStream(30);
+      const audioTracks = video.srcObject.getAudioTracks();
+      if (audioTracks.length) stream.addTrack(audioTracks[0]);
 
-function adjustServe(team,delta){
-  serve[team]=Math.max(0, Math.min(2, serve[team]+delta));
-  updateUI();
-}
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = saveVideo;
 
-function startRecording(){
-  let canvasStream=overlay.captureStream(30);
-  let combinedStream=new MediaStream([
-    ...stream.getVideoTracks(),
-    ...canvasStream.getVideoTracks(),
-    ...stream.getAudioTracks()
-  ]);
-  mediaRecorder=new MediaRecorder(combinedStream,{mimeType:"video/webm;codecs=vp9"});
-  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);}
-  mediaRecorder.onstop=saveRecording;
-  mediaRecorder.start();
-  startTime=Date.now();
-  timerInterval=setInterval(drawOverlay,1000);
-}
+      mediaRecorder.start();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      saveBtn.disabled = true;
+      recordedChunks = [];
+    };
 
-function stopRecording(){
-  mediaRecorder.stop();
-  clearInterval(timerInterval);
-}
+    stopBtn.onclick = () => {
+      mediaRecorder.stop();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
 
-function saveRecording(){
-  let blob=new Blob(recordedChunks,{type:"video/webm"});
-  let url=URL.createObjectURL(blob);
-  let a=document.createElement("a");
-  a.href=url;a.download="match_recording.webm";
-  a.click();
-  recordedChunks=[];
-}
+    photoBtn.onclick = () => {
+      const link = document.createElement("a");
+      link.download = "snapshot.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
 
-function takeSnapshot(){
-  let v=document.getElementById("video");
-  let snapCanvas=document.createElement("canvas");
-  snapCanvas.width=v.videoWidth; snapCanvas.height=v.videoHeight;
-  snapCanvas.getContext("2d").drawImage(v,0,0);
-  let link=document.createElement("a");
-  link.href=snapCanvas.toDataURL("image/png");
-  link.download="snapshot.png";
-  link.click();
-}
+    function saveVideo() {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "recorded.webm";
+      link.click();
+      saveBtn.disabled = false;
+    }
 
-updateUI();
-</script>
-
+    initCamera();
+  </script>
 </body>
 </html>
