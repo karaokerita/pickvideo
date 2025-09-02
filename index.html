@@ -5,8 +5,8 @@
 <title>Ghi hình thi đấu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { margin:0; padding:0; font-family: Arial, sans-serif; display: flex; flex-direction: row; height: 100vh; background: #111; color: white;}
-.left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative;}
+body { margin:0; padding:0; font-family: Arial, sans-serif; display:flex; flex-direction:row; height:100vh; background:#111; color:white; }
+.left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative; }
 canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
 .controls-bottom { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; font-size:12px; }
 .controls-bottom input, .controls-bottom select { width:100%; padding:4px; font-size:12px; }
@@ -87,11 +87,7 @@ async function startCamera(){
   const resolution = document.getElementById("resolution").value;
   try{
     stream = await navigator.mediaDevices.getUserMedia({
-      video:{
-        facingMode:"environment",
-        width: resolution=="1080"?1920:1280,
-        height: resolution=="1080"?1080:720
-      },
+      video:{ facingMode:"environment", width: resolution=="1080"?1920:1280, height: resolution=="1080"?1080:720 },
       audio:true
     });
     video.srcObject = stream;
@@ -122,59 +118,53 @@ function drawScoreboard(){
   ctx.font="24px Arial";
 
   const midX = canvas.width/2;
+
   ctx.textAlign="center";
   ctx.fillText("🏆", midX, canvas.height-25);
   ctx.fillText(`${teamA.score} - ${teamB.score}`, midX, canvas.height-50);
 
-  // Tên đội sát bảng tỉ số
   ctx.textAlign="left";
   ctx.fillText(teamA.name, midX - 120, canvas.height-25);
   ctx.textAlign="right";
   ctx.fillText(teamB.name, midX + 120, canvas.height-25);
 
-  // Chấm đỏ lượt giao sát tên đội
-  const serveGap = 15;
-  for(let i=0;i<teamA.serve;i++){
+  // Chấm đỏ lượt giao: chỉ 1 chấm cố định
+  if(teamA.serve > 0){
     ctx.beginPath();
-    ctx.arc(midX - 120 + i*serveGap, canvas.height-45, 6, 0, 2*Math.PI);
-    ctx.fillStyle="red"; ctx.fill();
+    ctx.arc(midX - 120, canvas.height-45, 6, 0, 2*Math.PI);
+    ctx.fillStyle="red";
+    ctx.fill();
   }
-  for(let i=0;i<teamB.serve;i++){
+  if(teamB.serve > 0){
     ctx.beginPath();
-    ctx.arc(midX + 120 - i*serveGap, canvas.height-45,6,0,2*Math.PI);
-    ctx.fillStyle="red"; ctx.fill();
+    ctx.arc(midX + 120, canvas.height-45, 6, 0, 2*Math.PI);
+    ctx.fillStyle="red";
+    ctx.fill();
   }
 }
 
 function chooseServer(team){
-  currentServer=team;
-  if(team=="A"){teamA.serve=1;teamB.serve=0;}
-  else {teamB.serve=1;teamA.serve=0;}
+  currentServer = team;
+  if(team=="A"){ teamA.serve=1; teamB.serve=0; }
+  else { teamB.serve=1; teamA.serve=0; }
 }
-function changeServe(team,delta){
-  if(team=="A" && currentServer=="A"){
-    teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2);
-    if(teamA.serve==0){teamB.serve=2;currentServer="B";}
-  }
-  if(team=="B" && currentServer=="B"){
-    teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2);
-    if(teamB.serve==0){teamA.serve=2;currentServer="A";}
-  }
-}
-function changeScore(team,delta){
+
+function changeServe(team, delta){ return; } // Không cho tăng/giảm lượt giao
+
+function changeScore(team, delta){
   if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
   if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0);
 }
 
 function startRecording(){
-  if(!stream) { alert("Camera chưa sẵn sàng"); return; }
+  if(!stream){ alert("Camera chưa sẵn sàng"); return; }
   chunks=[];
   recorder=new MediaRecorder(stream);
-  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.ondataavailable = e => chunks.push(e.data);
   recorder.start();
   liveIndicator.style.display="block";
   recordBtn.style.background="red";
-  recordBtn.disabled=true;
+  recordBtn.disabled = true;
 }
 
 function stopRecording(){
@@ -196,16 +186,19 @@ function stopRecording(){
 }
 
 function saveRecording(){
-  const blob=new Blob(chunks,{type:"video/webm"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download="match.webm"; a.click();
+  if(chunks.length==0) return;
+  const blob = new Blob(chunks,{type:"video/webm"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "match.webm";
+  a.click();
 }
 
 function captureFrame(){
-  const a=document.createElement("a");
-  a.href=canvas.toDataURL("image/png");
-  a.download="frame.png"; a.click();
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = "frame.png";
+  a.click();
 }
 </script>
 </body>
