@@ -121,29 +121,31 @@ function drawScoreboard(){
   if(teamB.serve>0) for(let i=0;i<teamB.serve;i++){ ctx.beginPath(); ctx.arc(canvas.width-60-i*15,canvas.height-40,6,0,2*Math.PI); ctx.fillStyle="red"; ctx.fill(); }
 }
 
-function startCamera(){
-  if(stream) return Promise.resolve(); // đã bật
+async function startCamera(){
+  if(stream) return;
   const resolution = document.getElementById("resolution").value;
-  return navigator.mediaDevices.getUserMedia({
-    video:{ facingMode:"environment", width: resolution=="1080"?1920:1280, height: resolution=="1080"?1080:720 },
-    audio:true
-  }).then(s=>{
-    stream = s;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:"environment", width: resolution=="1080"?1920:1280, height: resolution=="1080"?1080:720 },
+      audio:true
+    });
     video.srcObject = stream;
-    return video.play();
-  }).catch(e=>alert("Không mở được camera: "+e));
+    await video.play();
+    liveIndicator.style.display="none";
+  } catch(e){
+    alert("Không mở được camera: "+e);
+  }
 }
 
 function startRecording(){
-  startCamera().then(()=>{
-    chunks=[];
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = e=>chunks.push(e.data);
-    recorder.start();
-    liveIndicator.style.display="block";
-    recordBtn.style.background="red";
-    recordBtn.disabled=true;
-  });
+  if(!stream){ alert("Camera chưa sẵn sàng"); return; }
+  chunks=[];
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e=>chunks.push(e.data);
+  recorder.start();
+  liveIndicator.style.display="block";
+  recordBtn.style.background="red";
+  recordBtn.disabled=true;
 }
 
 function stopRecording(){
@@ -186,7 +188,10 @@ function chooseServer(team){ currentServer = team; if(team=="A"){ teamA.serve=1;
 function changeServe(team,delta){ if(team=="A" && currentServer=="A"){ teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2); if(teamA.serve==0){ teamB.serve=2; currentServer="B"; } } if(team=="B" && currentServer=="B"){ teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2); if(teamB.serve==0){ teamA.serve=2; currentServer="A"; } } }
 function changeScore(team,delta){ if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0); if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0); }
 
-drawScoreboard();
+window.onload = () => {
+  startCamera();
+  drawScoreboard();
+};
 </script>
 </body>
 </html>
