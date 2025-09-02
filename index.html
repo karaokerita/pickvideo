@@ -2,164 +2,297 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Ghi hình thi đấu</title>
+  <title>Ghi hình trận đấu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #111; color: white; }
-    .container { display: flex; flex-direction: column; align-items: center; padding: 10px; }
-    video, canvas { max-width: 320px; aspect-ratio: 16/9; background: black; border-radius: 8px; }
-    .scoreboard {
-      text-align: center; background: rgba(0,100,255,0.6); padding: 6px; border-radius: 8px; margin: 6px 0;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .scoreboard h3 { margin: 2px 0; font-size: 16px; }
-    .score-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .team { flex: 1; }
-    .serve-dots { color: red; font-size: 18px; margin-left: 4px; }
-    .buttons { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin: 6px 0; }
-    .buttons button {
-      font-size: 14px; padding: 6px 10px; border: none; border-radius: 6px; background: #333; color: white;
+    .container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      max-width: 900px;
+      justify-content: center;
+      align-items: flex-start;
     }
-    .group { margin: 4px 0; }
-    @media (orientation: landscape) {
-      .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 700px; }
+    #camera {
+      max-width: 320px;
+      aspect-ratio: 16/9;
+      background: black;
+      border-radius: 10px;
+      display: none;
+    }
+    #canvas {
+      display: none;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 10px;
+      gap: 12px;
+    }
+    fieldset {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.9);
+    }
+    legend {
+      font-weight: bold;
+    }
+    button {
+      padding: 6px 10px;
+      margin: 3px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #scoreboard {
+      position: relative;
+      text-align: center;
+      background: rgba(0, 123, 255, 0.7);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    #liveIndicator {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: red;
+      display: none;
+    }
+    .team {
+      display: inline-block;
+      margin: 0 15px;
+    }
+    input[type="text"] {
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      margin-bottom: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .video-settings {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
+  <div id="liveIndicator"></div>
+
   <div class="container">
     <video id="camera" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
 
-    <div class="scoreboard">
-      <h3 id="tournamentName">Tên giải đấu</h3>
-      <div class="score-row">
-        <div class="team" id="team1Name">Đội 1<span id="serve1" class="serve-dots"></span></div>
-        <div id="score1">0</div>
-        <div>-</div>
-        <div id="score2">0</div>
-        <div class="team" id="team2Name">Đội 2<span id="serve2" class="serve-dots"></span></div>
-      </div>
-    </div>
-
     <div class="controls">
-      <!-- Nhóm Đội 1 -->
-      <div class="group">
-        <h4>Đội 1</h4>
-        <div class="buttons">
-          <button onclick="updateScore(1,1)">+ Điểm</button>
-          <button onclick="updateScore(1,-1)">- Điểm</button>
-          <button onclick="adjustServe(1,1)">+ Giao</button>
-          <button onclick="adjustServe(1,-1)">- Giao</button>
-        </div>
-      </div>
+      <fieldset>
+        <legend>Đội A</legend>
+        <button id="teamAserve" onclick="setInitialServe('A')">Chọn giao banh</button><br>
+        <button id="teamAservePlus" onclick="adjustServe('A', 1)" disabled>+ Lượt</button>
+        <button id="teamAserveMinus" onclick="adjustServe('A', -1)" disabled>- Lượt</button><br>
+        <button id="teamApointPlus" onclick="adjustScore('A', 1)" disabled>+ Điểm</button>
+        <button id="teamApointMinus" onclick="adjustScore('A', -1)" disabled>- Điểm</button>
+      </fieldset>
 
-      <!-- Nhóm Đội 2 -->
-      <div class="group">
-        <h4>Đội 2</h4>
-        <div class="buttons">
-          <button onclick="updateScore(2,1)">+ Điểm</button>
-          <button onclick="updateScore(2,-1)">- Điểm</button>
-          <button onclick="adjustServe(2,1)">+ Giao</button>
-          <button onclick="adjustServe(2,-1)">- Giao</button>
+      <fieldset>
+        <legend>Video</legend>
+        <button onclick="startRecording()">Ghi hình</button>
+        <button onclick="stopRecording()" disabled>Kết thúc</button>
+        <button onclick="captureImage()">Chụp ảnh</button><br>
+        <div class="video-settings">
+          <label>Chất lượng:
+            <select id="quality">
+              <option value="720">720p</option>
+              <option value="1080">1080p</option>
+            </select>
+          </label>
         </div>
-      </div>
+      </fieldset>
 
-      <!-- Nhóm Video -->
-      <div class="group" style="grid-column: span 2; text-align: center;">
-        <h4>Video</h4>
-        <div class="buttons">
-          <button onclick="startRecording()">Bắt đầu</button>
-          <button onclick="stopRecording()">Dừng</button>
-          <button onclick="takeSnapshot()">Chụp ảnh</button>
-          <button onclick="downloadVideo()">Lưu video</button>
-        </div>
-      </div>
+      <fieldset>
+        <legend>Đội B</legend>
+        <button id="teamBserve" onclick="setInitialServe('B')">Chọn giao banh</button><br>
+        <button id="teamBservePlus" onclick="adjustServe('B', 1)" disabled>+ Lượt</button>
+        <button id="teamBserveMinus" onclick="adjustServe('B', -1)" disabled>- Lượt</button><br>
+        <button id="teamBpointPlus" onclick="adjustScore('B', 1)" disabled>+ Điểm</button>
+        <button id="teamBpointMinus" onclick="adjustScore('B', -1)" disabled>- Điểm</button>
+      </fieldset>
+    </div>
+  </div>
+
+  <div id="scoreboard">
+    <input type="text" id="tournament" placeholder="Tên giải đấu"><br>
+    <div class="team">
+      <input type="text" id="teamAname" placeholder="Tên đội A" value="Đội A"><br>
+      <span id="teamAscore">0</span>
+    </div>
+    <span> - </span>
+    <div class="team">
+      <input type="text" id="teamBname" placeholder="Tên đội B" value="Đội B"><br>
+      <span id="teamBscore">0</span>
     </div>
   </div>
 
   <script>
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let mediaRecorder, recordedChunks = [];
-    let stream;
+    let stream, recorder, chunks = [];
+    let ctx = document.getElementById('canvas').getContext('2d');
+    let camera = document.getElementById('camera');
+    let canvas = document.getElementById('canvas');
+    let liveIndicator = document.getElementById('liveIndicator');
+    let timerInterval;
+    let startTime;
 
-    let scores = [0,0];
-    let serves = [0,0];
-    let currentServer = null;
+    let scores = { A: 0, B: 0 };
+    let serve = { A: 0, B: 0 };
+    let currentServe = null;
 
-    async function initCamera() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: true
-        });
-        video.srcObject = stream;
-        canvas.width = 1280; canvas.height = 720;
-        drawLoop();
-      } catch (e) { console.error("Không mở được camera", e); }
+    function updateScoreboard() {
+      document.getElementById('teamAscore').textContent = scores.A;
+      document.getElementById('teamBscore').textContent = scores.B;
     }
 
-    function drawLoop() {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "white"; ctx.font = "20px Arial"; ctx.fillText(`${scores[0]} - ${scores[1]}`, canvas.width/2 - 20, 30);
-      requestAnimationFrame(drawLoop);
-    }
+    function drawOverlay() {
+      ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-    function updateScore(team, delta) {
-      scores[team-1] = Math.max(0, scores[team-1] + delta);
-      document.getElementById(`score${team}`).textContent = scores[team-1];
-    }
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText(document.getElementById('tournament').value, 20, 30);
+      ctx.fillText(document.getElementById('teamAname').value + " " + scores.A, 20, canvas.height - 40);
+      ctx.fillText(document.getElementById('teamBname').value + " " + scores.B, canvas.width - 150, canvas.height - 40);
 
-    function adjustServe(team, delta) {
-      serves[team-1] += delta;
-      if (serves[team-1] < 0) serves[team-1] = 0;
-      if (serves[team-1] > 2) serves[team-1] = 2;
-
-      if (serves[team-1] === 0) {
-        let other = team === 1 ? 2 : 1;
-        serves[other-1] = 2;
-        currentServer = other;
-      } else {
-        currentServer = team;
+      ctx.fillStyle = "red";
+      let dots = serve.A;
+      for (let i = 0; i < dots; i++) {
+        ctx.beginPath();
+        ctx.arc(20 + i*15, canvas.height - 60, 6, 0, Math.PI*2);
+        ctx.fill();
       }
-      renderServe();
+      dots = serve.B;
+      for (let i = 0; i < dots; i++) {
+        ctx.beginPath();
+        ctx.arc(canvas.width - 50 + i*15, canvas.height - 60, 6, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      if (startTime) {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        let seconds = String(elapsed % 60).padStart(2, "0");
+        ctx.fillStyle = "yellow";
+        ctx.fillText(`${minutes}:${seconds}`, canvas.width/2 - 20, 30);
+      }
+
+      requestAnimationFrame(drawOverlay);
     }
 
-    function renderServe() {
-      document.getElementById("serve1").textContent = "•".repeat(serves[0]);
-      document.getElementById("serve2").textContent = "•".repeat(serves[1]);
-    }
+    async function startRecording() {
+      let quality = document.getElementById('quality').value;
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: quality == "1080" ? 1920 : 1280 }, height: { ideal: quality == "1080" ? 1080 : 720 } },
+        audio: true
+      });
 
-    function startRecording() {
-      const recordedStream = canvas.captureStream(30);
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) recordedStream.addTrack(audioTrack);
-      mediaRecorder = new MediaRecorder(recordedStream, { mimeType: "video/webm" });
-      recordedChunks = [];
-      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-      mediaRecorder.start();
+      camera.srcObject = stream;
+      camera.style.display = "block";
+
+      canvas.width = camera.videoWidth || (quality == "1080" ? 1920 : 1280);
+      canvas.height = camera.videoHeight || (quality == "1080" ? 1080 : 720);
+      canvas.style.display = "block";
+
+      startTime = Date.now();
+      drawOverlay();
+
+      let combinedStream = canvas.captureStream(30);
+      let audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) combinedStream.addTrack(audioTrack);
+
+      recorder = new MediaRecorder(combinedStream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = saveRecording;
+      recorder.start();
+
+      liveIndicator.style.display = "block";
+      document.querySelector("button[onclick='startRecording()']").disabled = true;
+      document.querySelector("button[onclick='stopRecording()']").disabled = false;
     }
 
     function stopRecording() {
-      if (mediaRecorder) mediaRecorder.stop();
+      recorder.stop();
+      stream.getTracks().forEach(track => track.stop());
+      liveIndicator.style.display = "none";
+      document.querySelector("button[onclick='startRecording()']").disabled = false;
+      document.querySelector("button[onclick='stopRecording()']").disabled = true;
+      camera.style.display = "none";
+      canvas.style.display = "none";
     }
 
-    function downloadVideo() {
-      const blob = new Blob(recordedChunks, { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = "recorded.webm"; a.click();
+    function saveRecording() {
+      let blob = new Blob(chunks, { type: "video/webm" });
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      a.href = url;
+      a.download = "match_recording.webm";
+      a.click();
+      chunks = [];
     }
 
-    function takeSnapshot() {
-      const link = document.createElement("a");
-      link.download = "snapshot.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+    function captureImage() {
+      let img = canvas.toDataURL("image/png");
+      let a = document.createElement("a");
+      a.href = img;
+      a.download = "snapshot.png";
+      a.click();
     }
 
-    initCamera();
+    function setInitialServe(team) {
+      serve[team] = 1;
+      currentServe = team;
+      updateButtons();
+    }
+
+    function adjustServe(team, change) {
+      if (currentServe !== team) return;
+      serve[team] = Math.max(0, Math.min(2, serve[team] + change));
+      if (serve[team] === 0) {
+        currentServe = (team === "A" ? "B" : "A");
+        serve[currentServe] = 2;
+      }
+      updateButtons();
+    }
+
+    function adjustScore(team, change) {
+      if (currentServe !== team || serve[team] <= 0) return;
+      scores[team] = Math.max(0, scores[team] + change);
+      updateScoreboard();
+    }
+
+    function updateButtons() {
+      ["A","B"].forEach(team => {
+        document.getElementById(`team${team}servePlus`).disabled = (currentServe !== team);
+        document.getElementById(`team${team}serveMinus`).disabled = (currentServe !== team || serve[team] <= 0);
+        document.getElementById(`team${team}pointPlus`).disabled = (currentServe !== team || serve[team] <= 0);
+        document.getElementById(`team${team}pointMinus`).disabled = (currentServe !== team || serve[team] <= 0);
+      });
+    }
   </script>
 </body>
 </html>
