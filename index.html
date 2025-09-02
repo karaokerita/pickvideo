@@ -9,12 +9,13 @@ body { margin:0; padding:0; font-family: Arial, sans-serif; display:flex; flex-d
 .left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative; }
 canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
 .controls-bottom { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; font-size:12px; }
-.controls-bottom input, .controls-bottom select, .controls-bottom button { font-size:12px; padding:4px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
+.controls-bottom select, .controls-bottom button { font-size:12px; padding:4px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
 .controls-bottom button:hover { background:#555; }
 .right-panel { display:flex; flex-direction:row; justify-content:flex-start; align-items:flex-start; flex:1; gap:10px; }
-.team { display:flex; flex-direction:column; align-items:center; background:#222; padding:6px; border-radius:10px; min-width:90px; }
+.team { display:flex; flex-direction:column; align-items:center; background:#222; padding:6px; border-radius:10px; min-width:120px; }
 .team h3 { margin:2px 0; font-size:14px; }
-.team button { margin:2px; padding:4px 6px; border-radius:6px; border:none; background:#333; color:white; cursor:pointer; }
+.team input, .team button { margin:2px; padding:4px 6px; border-radius:6px; border:none; background:#333; color:white; cursor:pointer; font-size:12px; }
+.team input { width:100px; }
 .team button:hover { background:#555; }
 #liveIndicator { position:absolute; top:8px; left:8px; background:red; color:white; font-size:12px; padding:2px 5px; border-radius:4px; display:none; }
 </style>
@@ -28,8 +29,6 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
 
   <div class="controls-bottom">
     <input type="text" id="tournamentName" placeholder="Tên giải đấu">
-    <input type="text" id="teamAName" placeholder="Tên đội A">
-    <input type="text" id="teamBName" placeholder="Tên đội B">
     <select id="resolution">
       <option value="720">720p</option>
       <option value="1080">1080p</option>
@@ -44,7 +43,8 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
 
 <div class="right-panel">
   <div class="team" id="teamAControls">
-    <h3>A</h3>
+    <h3>Đội A</h3>
+    <input type="text" id="teamAName" placeholder="Tên đội A">
     <button onclick="chooseServer('A')">Chọn giao</button>
     <button onclick="changeServe('A',1)">+ Giao</button>
     <button onclick="changeServe('A',-1)">- Giao</button>
@@ -53,7 +53,8 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
   </div>
 
   <div class="team" id="teamBControls">
-    <h3>B</h3>
+    <h3>Đội B</h3>
+    <input type="text" id="teamBName" placeholder="Tên đội B">
     <button onclick="chooseServer('B')">Chọn giao</button>
     <button onclick="changeServe('B',1)">+ Giao</button>
     <button onclick="changeServe('B',-1)">- Giao</button>
@@ -62,7 +63,6 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
   </div>
 </div>
 
-<!-- FFmpeg.js -->
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.8/dist/ffmpeg.min.js"></script>
 <script>
 const { createFFmpeg, fetchFile } = FFmpeg;
@@ -79,7 +79,6 @@ let teamA={name:"A", score:0, serve:0};
 let teamB={name:"B", score:0, serve:0};
 let currentServer=null;
 
-// Cập nhật tên đội hiển thị trên canvas
 document.getElementById("teamAName").addEventListener("input", e=>{ teamA.name = e.target.value || "A"; });
 document.getElementById("teamBName").addEventListener("input", e=>{ teamB.name = e.target.value || "B"; });
 
