@@ -14,7 +14,6 @@ body {
   background: #111;
   color: white;
 }
-/* Bên trái: canvas + chức năng video */
 .left-panel {
   display: flex;
   flex-direction: column;
@@ -56,8 +55,6 @@ canvas {
 .controls-bottom button:hover {
   background:#555;
 }
-
-/* Nhóm chức năng đội bên phải */
 .right-panel {
   display:flex;
   flex-direction:row;
@@ -79,8 +76,6 @@ canvas {
   margin:4px 0;
   font-size:14px;
 }
-
-/* Live indicator */
 #liveIndicator {
   position:absolute;
   top:8px;
@@ -146,7 +141,6 @@ let teamA={name:"A", score:0, serve:0};
 let teamB={name:"B", score:0, serve:0};
 let currentServer=null;
 
-// Cập nhật tên đội tự động
 document.getElementById("teamAName").addEventListener("input", e=>{
   teamA.name=e.target.value||"A";
   document.getElementById("teamALabel").textContent=teamA.name;
@@ -181,7 +175,7 @@ function drawScoreboard(){
   canvas.height = video.videoHeight;
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-  // overlay bảng tên giải
+  // Tên giải
   ctx.fillStyle="rgba(0,0,100,0.6)";
   ctx.fillRect(0,0,canvas.width,50);
   ctx.fillStyle="white";
@@ -189,42 +183,44 @@ function drawScoreboard(){
   ctx.textAlign="center";
   ctx.fillText(document.getElementById("tournamentName").value,canvas.width/2,30);
 
-  // overlay bảng điểm
+  // Bảng điểm
   ctx.fillStyle="rgba(0,0,100,0.6)";
   ctx.fillRect(0,canvas.height-60,canvas.width,60);
   ctx.fillStyle="white";
   ctx.font="24px Arial";
 
-  // Tên đội cách số điểm
-  ctx.textAlign="left";
-  ctx.fillText(teamA.name, canvas.width*0.25-40, canvas.height-25);
-  ctx.textAlign="center";
-  ctx.fillText("🏆",canvas.width/2,canvas.height-25);
-  ctx.fillText(`${teamA.score} - ${teamB.score}`,canvas.width/2,canvas.height-50);
-  ctx.textAlign="right";
-  ctx.fillText(teamB.name, canvas.width*0.75+40, canvas.height-25);
+  const midX = canvas.width/2;
 
-  // Chấm đỏ lượt giao
+  // icon 🏆 + điểm ở giữa
+  ctx.textAlign="center";
+  ctx.fillText("🏆", midX, canvas.height-25);
+  ctx.fillText(`${teamA.score} - ${teamB.score}`, midX, canvas.height-50);
+
+  // Tên đội sát bảng tỉ số
+  ctx.textAlign="left";
+  ctx.fillText(teamA.name, midX - 120, canvas.height-25);
+  ctx.textAlign="right";
+  ctx.fillText(teamB.name, midX + 120, canvas.height-25);
+
+  // Chấm đỏ lượt giao sát tên đội
+  const serveGap = 15;
   for(let i=0;i<teamA.serve;i++){
     ctx.beginPath();
-    ctx.arc(canvas.width*0.25-10+i*15,canvas.height-45,6,0,2*Math.PI);
+    ctx.arc(midX - 120 + i*serveGap, canvas.height-45, 6, 0, 2*Math.PI);
     ctx.fillStyle="red"; ctx.fill();
   }
   for(let i=0;i<teamB.serve;i++){
     ctx.beginPath();
-    ctx.arc(canvas.width*0.75+10-i*15,canvas.height-45,6,0,2*Math.PI);
+    ctx.arc(midX + 120 - i*serveGap, canvas.height-45,6,0,2*Math.PI);
     ctx.fillStyle="red"; ctx.fill();
   }
 }
 
-// Chọn giao
 function chooseServer(team){
   currentServer=team;
   if(team=="A"){teamA.serve=1;teamB.serve=0;}
   else {teamB.serve=1;teamA.serve=0;}
 }
-
-// Thay đổi lượt giao
 function changeServe(team,delta){
   if(team=="A" && currentServer=="A"){
     teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2);
@@ -235,14 +231,11 @@ function changeServe(team,delta){
     if(teamB.serve==0){teamA.serve=2;currentServer="A";}
   }
 }
-
-// Thay đổi điểm
 function changeScore(team,delta){
   if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
   if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0);
 }
 
-// Ghi hình
 function startRecording(){
   chunks=[];
   recorder=new MediaRecorder(stream);
@@ -250,8 +243,6 @@ function startRecording(){
   recorder.start();
   liveIndicator.style.display="block";
 }
-
-// Kết thúc ghi hình
 function stopRecording(){
   if(recorder && recorder.state!="inactive"){
     recorder.onstop = () => {
@@ -265,21 +256,7 @@ function stopRecording(){
     liveIndicator.style.display="none";
   }
 }
-
-// Lưu video
 function saveRecording(){
   const blob=new Blob(chunks,{type:"video/webm"});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download="match.webm"; a.click();
-}
-
-// Chụp ảnh
-function captureFrame(){
-  const a=document.createElement("a");
-  a.href=canvas.toDataURL("image/png");
-  a.download="frame.png"; a.click();
-}
-</script>
-</body>
-</html>
+  const a
