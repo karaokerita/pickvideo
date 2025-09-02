@@ -9,12 +9,13 @@ body { margin:0; padding:0; font-family: Arial, sans-serif; display:flex; flex-d
 .left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative; }
 canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
 .controls-bottom { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; font-size:12px; }
-.controls-bottom select, .controls-bottom button { font-size:12px; padding:4px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
-.controls-bottom button:hover, .right-panel .team button:hover { background:#555; }
+.controls-bottom input, .controls-bottom select, .controls-bottom button { font-size:12px; padding:4px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
+.controls-bottom button:hover { background:#555; }
 .right-panel { display:flex; flex-direction:row; justify-content:flex-start; align-items:flex-start; flex:1; gap:10px; }
 .team { display:flex; flex-direction:column; align-items:center; background:#222; padding:6px; border-radius:10px; min-width:90px; }
 .team h3 { margin:2px 0; font-size:14px; }
-.team input { margin-bottom:4px; width:80px; font-size:12px; text-align:center; }
+.team button { margin:2px; padding:4px 6px; border-radius:6px; border:none; background:#333; color:white; cursor:pointer; }
+.team button:hover { background:#555; }
 #liveIndicator { position:absolute; top:8px; left:8px; background:red; color:white; font-size:12px; padding:2px 5px; border-radius:4px; display:none; }
 </style>
 </head>
@@ -27,6 +28,8 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
 
   <div class="controls-bottom">
     <input type="text" id="tournamentName" placeholder="Tên giải đấu">
+    <input type="text" id="teamAName" placeholder="Tên đội A">
+    <input type="text" id="teamBName" placeholder="Tên đội B">
     <select id="resolution">
       <option value="720">720p</option>
       <option value="1080">1080p</option>
@@ -41,8 +44,7 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
 
 <div class="right-panel">
   <div class="team" id="teamAControls">
-    <input type="text" id="teamAName" placeholder="Tên đội A">
-    <h3 id="teamALabel">A</h3>
+    <h3>A</h3>
     <button onclick="chooseServer('A')">Chọn giao</button>
     <button onclick="changeServe('A',1)">+ Giao</button>
     <button onclick="changeServe('A',-1)">- Giao</button>
@@ -51,8 +53,7 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
   </div>
 
   <div class="team" id="teamBControls">
-    <input type="text" id="teamBName" placeholder="Tên đội B">
-    <h3 id="teamBLabel">B</h3>
+    <h3>B</h3>
     <button onclick="chooseServer('B')">Chọn giao</button>
     <button onclick="changeServe('B',1)">+ Giao</button>
     <button onclick="changeServe('B',-1)">- Giao</button>
@@ -73,15 +74,9 @@ let teamA={name:"A", score:0, serve:0};
 let teamB={name:"B", score:0, serve:0};
 let currentServer=null;
 
-// Cập nhật tên đội live
-document.getElementById("teamAName").addEventListener("input", e=>{
-  teamA.name = e.target.value || "A";
-  document.getElementById("teamALabel").textContent = teamA.name;
-});
-document.getElementById("teamBName").addEventListener("input", e=>{
-  teamB.name = e.target.value || "B";
-  document.getElementById("teamBLabel").textContent = teamB.name;
-});
+// Cập nhật tên đội hiển thị trên canvas
+document.getElementById("teamAName").addEventListener("input", e=>{ teamA.name = e.target.value || "A"; });
+document.getElementById("teamBName").addEventListener("input", e=>{ teamB.name = e.target.value || "B"; });
 
 window.onload = () => startCamera();
 
@@ -105,13 +100,13 @@ function drawScoreboard(){
   canvas.height = video.videoHeight;
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-  // Tên giải
+  // Overlay tên giải
   ctx.fillStyle="rgba(0,0,100,0.6)";
   ctx.fillRect(0,0,canvas.width,50);
   ctx.fillStyle="white";
   ctx.font="20px Arial";
   ctx.textAlign="center";
-  ctx.fillText(document.getElementById("tournamentName").value,canvas.width/2,30);
+  ctx.fillText(document.getElementById("tournamentName").value, canvas.width/2,30);
 
   // Bảng điểm
   ctx.fillStyle="rgba(0,0,100,0.6)";
@@ -131,18 +126,20 @@ function drawScoreboard(){
   ctx.textAlign="right";
   ctx.fillText(teamB.name, midX + 120, canvas.height-25);
 
-  // Chấm đỏ lượt giao (cố định 1 chấm)
-  if(teamA.serve > 0){
-    ctx.beginPath();
-    ctx.arc(midX - 120, canvas.height-45, 6, 0, 2*Math.PI);
-    ctx.fillStyle="red";
-    ctx.fill();
+  // Chấm đỏ lượt giao (như phiên bản 1)
+  if(teamA.serve>0){
+    for(let i=0;i<teamA.serve;i++){
+      ctx.beginPath();
+      ctx.arc(60+i*15,canvas.height-40,6,0,2*Math.PI);
+      ctx.fillStyle="red"; ctx.fill();
+    }
   }
-  if(teamB.serve > 0){
-    ctx.beginPath();
-    ctx.arc(midX + 120, canvas.height-45, 6, 0, 2*Math.PI);
-    ctx.fillStyle="red";
-    ctx.fill();
+  if(teamB.serve>0){
+    for(let i=0;i<teamB.serve;i++){
+      ctx.beginPath();
+      ctx.arc(canvas.width-60-i*15,canvas.height-40,6,0,2*Math.PI);
+      ctx.fillStyle="red"; ctx.fill();
+    }
   }
 }
 
@@ -152,7 +149,16 @@ function chooseServer(team){
   else { teamB.serve=1; teamA.serve=0; }
 }
 
-function changeServe(team, delta){ return; } // Không cho tăng/giảm lượt giao
+function changeServe(team, delta){
+  if(team=="A" && currentServer=="A"){
+    teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2);
+    if(teamA.serve==0){ teamB.serve=2; currentServer="B"; }
+  }
+  if(team=="B" && currentServer=="B"){
+    teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2);
+    if(teamB.serve==0){ teamA.serve=2; currentServer="A"; }
+  }
+}
 
 function changeScore(team, delta){
   if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
@@ -162,12 +168,12 @@ function changeScore(team, delta){
 function startRecording(){
   if(!stream){ alert("Camera chưa sẵn sàng"); return; }
   chunks=[];
-  recorder=new MediaRecorder(stream);
+  recorder = new MediaRecorder(stream);
   recorder.ondataavailable = e => chunks.push(e.data);
   recorder.start();
   liveIndicator.style.display="block";
   recordBtn.style.background="red";
-  recordBtn.disabled = true;
+  recordBtn.disabled=true;
 }
 
 function stopRecording(){
@@ -192,15 +198,15 @@ function saveRecording(){
   if(chunks.length==0) return;
   const blob = new Blob(chunks,{type:"video/webm"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "match.webm";
+  const a=document.createElement("a");
+  a.href=url; a.download="match.webm";
   a.click();
 }
 
 function captureFrame(){
-  const a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
-  a.download = "frame.png";
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download="frame.png";
   a.click();
 }
 </script>
