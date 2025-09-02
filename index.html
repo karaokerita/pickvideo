@@ -1,264 +1,265 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Ghi hình thi đấu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0; padding: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: row;
-      height: 100vh;
-      background: #111;
-      color: white;
-    }
-    /* Bố cục chính: camera bên trái, chức năng bên phải */
-    .left-panel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-      max-width: 360px;
-      background: #000;
-      position: relative;
-    }
-    video, canvas {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #000;
-      border: 2px solid #444;
-    }
-    .controls-bottom {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 6px;
-      font-size: 12px;
-    }
-    .controls-bottom input {
-      width: 100%;
-      padding: 4px;
-      font-size: 12px;
-    }
-    .controls-bottom button, .team button {
-      padding: 4px 6px;
-      font-size: 12px;
-      margin: 2px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background: #333;
-      color: white;
-    }
-    .controls-bottom button:hover, .team button:hover {
-      background: #555;
-    }
-    .right-panel {
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: flex-start;
-      flex: 1;
-      padding: 4px;
-      gap: 10px;
-    }
-    .team {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #222;
-      padding: 6px;
-      border-radius: 10px;
-      min-width: 90px;
-    }
-    .team h3 {
-      margin: 4px 0;
-      font-size: 14px;
-    }
-    /* Live indicator */
-    #liveIndicator {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: red;
-      color: white;
-      font-size: 12px;
-      padding: 2px 5px;
-      border-radius: 4px;
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Ghi hình thi đấu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0; padding:0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  background: #111;
+  color: white;
+}
+/* Bên trái: camera + bảng tỉ số + chức năng video */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex:1;
+  max-width: 360px;
+  background: #000;
+  position: relative;
+}
+video, canvas {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border: 2px solid #444;
+}
+.controls-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap:6px;
+  padding:6px;
+  font-size:12px;
+}
+.controls-bottom input, .controls-bottom select {
+  width: 100%;
+  padding:4px;
+  font-size:12px;
+}
+.controls-bottom button {
+  padding:4px 6px;
+  font-size:12px;
+  margin:2px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  background:#333;
+  color:white;
+}
+.controls-bottom button:hover {
+  background:#555;
+}
+
+/* Nhóm chức năng đội bên phải */
+.right-panel {
+  display:flex;
+  flex-direction:row;
+  justify-content:flex-start;
+  align-items:flex-start;
+  flex:1;
+  gap:10px;
+}
+.team {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:#222;
+  padding:6px;
+  border-radius:10px;
+  min-width:90px;
+}
+.team h3 {
+  margin:4px 0;
+  font-size:14px;
+}
+
+/* Live indicator */
+#liveIndicator {
+  position:absolute;
+  top:8px;
+  left:8px;
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:2px 5px;
+  border-radius:4px;
+  display:none;
+}
+</style>
 </head>
 <body>
-  <!-- Khung camera + canvas -->
-  <div class="left-panel">
-    <div id="liveIndicator">● LIVE</div>
-    <video id="camera" autoplay playsinline muted></video>
-    <canvas id="scoreboard"></canvas>
+<div class="left-panel">
+  <div id="liveIndicator">● LIVE</div>
+  <video id="camera" autoplay playsinline muted></video>
+  <canvas id="scoreboard"></canvas>
 
-    <!-- Nhóm video + cài đặt -->
-    <div class="controls-bottom">
-      <input type="text" id="tournamentName" placeholder="Tên giải đấu">
-      <input type="text" id="teamAName" placeholder="Tên đội A">
-      <input type="text" id="teamBName" placeholder="Tên đội B">
-      <select id="resolution">
-        <option value="720">720p</option>
-        <option value="1080">1080p</option>
-      </select>
-      <div>
-        <button onclick="startRecording()">Ghi hình</button>
-        <button onclick="stopRecording()">Kết thúc</button>
-        <button onclick="captureFrame()">Chụp ảnh</button>
-      </div>
+  <div class="controls-bottom">
+    <input type="text" id="tournamentName" placeholder="Tên giải đấu">
+    <input type="text" id="teamAName" placeholder="Tên đội A">
+    <input type="text" id="teamBName" placeholder="Tên đội B">
+    <select id="resolution">
+      <option value="720">720p</option>
+      <option value="1080">1080p</option>
+    </select>
+    <div>
+      <button onclick="startRecording()">Ghi hình</button>
+      <button onclick="stopRecording()">Kết thúc</button>
+      <button onclick="captureFrame()">Chụp ảnh</button>
     </div>
   </div>
+</div>
 
-  <!-- Nhóm điều khiển đội A + B -->
-  <div class="right-panel">
-    <!-- Đội A -->
-    <div class="team" id="teamAControls">
-      <h3>A</h3>
-      <button onclick="chooseServer('A')">Chọn giao</button>
-      <button onclick="changeServe('A',1)">+ Giao</button>
-      <button onclick="changeServe('A',-1)">- Giao</button>
-      <button onclick="changeScore('A',1)">+ Điểm</button>
-      <button onclick="changeScore('A',-1)">- Điểm</button>
-    </div>
-    <!-- Đội B -->
-    <div class="team" id="teamBControls">
-      <h3>B</h3>
-      <button onclick="chooseServer('B')">Chọn giao</button>
-      <button onclick="changeServe('B',1)">+ Giao</button>
-      <button onclick="changeServe('B',-1)">- Giao</button>
-      <button onclick="changeScore('B',1)">+ Điểm</button>
-      <button onclick="changeScore('B',-1)">- Điểm</button>
-    </div>
+<div class="right-panel">
+  <div class="team" id="teamAControls">
+    <h3 id="teamALabel">A</h3>
+    <button onclick="chooseServer('A')">Chọn giao</button>
+    <button onclick="changeServe('A',1)">+ Giao</button>
+    <button onclick="changeServe('A',-1)">- Giao</button>
+    <button onclick="changeScore('A',1)">+ Điểm</button>
+    <button onclick="changeScore('A',-1)">- Điểm</button>
   </div>
+  <div class="team" id="teamBControls">
+    <h3 id="teamBLabel">B</h3>
+    <button onclick="chooseServer('B')">Chọn giao</button>
+    <button onclick="changeServe('B',1)">+ Giao</button>
+    <button onclick="changeServe('B',-1)">- Giao</button>
+    <button onclick="changeScore('B',1)">+ Điểm</button>
+    <button onclick="changeScore('B',-1)">- Điểm</button>
+  </div>
+</div>
 
 <script>
-  const video = document.getElementById("camera");
-  const canvas = document.getElementById("scoreboard");
-  const ctx = canvas.getContext("2d");
-  const liveIndicator = document.getElementById("liveIndicator");
+const video = document.getElementById("camera");
+const canvas = document.getElementById("scoreboard");
+const ctx = canvas.getContext("2d");
+const liveIndicator = document.getElementById("liveIndicator");
 
-  let stream, recorder, chunks = [];
-  let teamA = {name:"A", score:0, serve:0};
-  let teamB = {name:"B", score:0, serve:0};
-  let currentServer = null;
+let stream, recorder, chunks=[];
+let teamA={name:"A", score:0, serve:0};
+let teamB={name:"B", score:0, serve:0};
+let currentServer=null;
 
-  // mở camera mặc định khi load
-  window.onload = () => startCamera();
+// cập nhật tên đội tự động
+document.getElementById("teamAName").addEventListener("input", e=>{
+  teamA.name=e.target.value||"A";
+  document.getElementById("teamALabel").textContent=teamA.name;
+});
+document.getElementById("teamBName").addEventListener("input", e=>{
+  teamB.name=e.target.value||"B";
+  document.getElementById("teamBLabel").textContent=teamB.name;
+});
 
-  async function startCamera() {
-    const resolution = document.getElementById("resolution").value;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: resolution=="1080"?1920:1280,
-          height: resolution=="1080"?1080:720
-        },
-        audio: true
-      });
-      video.srcObject = stream;
-      drawScoreboard();
-    } catch(e){ alert("Không mở được camera: "+e); }
+window.onload = () => startCamera();
+
+async function startCamera(){
+  const resolution = document.getElementById("resolution").value;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:"environment",
+        width: resolution=="1080"?1920:1280,
+        height: resolution=="1080"?1080:720
+      },
+      audio:true
+    });
+    video.srcObject = stream;
+    drawScoreboard();
+  } catch(e){ alert("Không mở được camera: "+e);}
+}
+
+function drawScoreboard(){
+  requestAnimationFrame(drawScoreboard);
+  if(!video.videoWidth) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+  // overlay bảng tên giải
+  ctx.fillStyle="rgba(0,0,100,0.6)";
+  ctx.fillRect(0,0,canvas.width,50);
+  ctx.fillStyle="white";
+  ctx.font="20px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(document.getElementById("tournamentName").value,canvas.width/2,30);
+
+  // overlay bảng điểm
+  ctx.fillStyle="rgba(0,0,100,0.6)";
+  ctx.fillRect(0,canvas.height-60,canvas.width,60);
+  ctx.fillStyle="white";
+  ctx.font="24px Arial";
+  ctx.textAlign="left";
+  ctx.fillText(teamA.name,20,canvas.height-25);
+  ctx.textAlign="center";
+  ctx.fillText("🏆",canvas.width/2,canvas.height-25);
+  ctx.fillText(`${teamA.score} - ${teamB.score}`,canvas.width/2+40,canvas.height-25);
+  ctx.textAlign="right";
+  ctx.fillText(teamB.name,canvas.width-20,canvas.height-25);
+
+  // vẽ chấm đỏ lượt giao
+  for(let i=0;i<teamA.serve;i++){
+    ctx.beginPath();
+    ctx.arc(60+i*15,canvas.height-45,6,0,2*Math.PI);
+    ctx.fillStyle="red"; ctx.fill();
   }
-
-  function drawScoreboard(){
-    requestAnimationFrame(drawScoreboard);
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-
-    // overlay nền xanh mờ
-    ctx.fillStyle="rgba(0,0,100,0.6)";
-    ctx.fillRect(0,0,canvas.width,50);
-
-    // tên giải
-    ctx.fillStyle="white";
-    ctx.font="20px Arial";
-    ctx.textAlign="center";
-    ctx.fillText(document.getElementById("tournamentName").value, canvas.width/2, 25);
-
-    // bảng điểm
-    ctx.fillStyle="rgba(0,0,100,0.6)";
-    ctx.fillRect(0,canvas.height-50,canvas.width,50);
-
-    ctx.fillStyle="white";
-    ctx.font="20px Arial";
-    ctx.textAlign="left";
-    ctx.fillText(document.getElementById("teamAName").value||"A",20,canvas.height-20);
-    ctx.textAlign="right";
-    ctx.fillText(document.getElementById("teamBName").value||"B",canvas.width-20,canvas.height-20);
-
-    ctx.textAlign="center";
-    ctx.fillText(`${teamA.score} - ${teamB.score}`,canvas.width/2,canvas.height-20);
-
-    // vẽ chấm đỏ lượt giao
-    if(teamA.serve>0){
-      for(let i=0;i<teamA.serve;i++){
-        ctx.beginPath();
-        ctx.arc(60+i*15,canvas.height-40,6,0,2*Math.PI);
-        ctx.fillStyle="red"; ctx.fill();
-      }
-    }
-    if(teamB.serve>0){
-      for(let i=0;i<teamB.serve;i++){
-        ctx.beginPath();
-        ctx.arc(canvas.width-60-i*15,canvas.height-40,6,0,2*Math.PI);
-        ctx.fillStyle="red"; ctx.fill();
-      }
-    }
+  for(let i=0;i<teamB.serve;i++){
+    ctx.beginPath();
+    ctx.arc(canvas.width-60-i*15,canvas.height-45,6,0,2*Math.PI);
+    ctx.fillStyle="red"; ctx.fill();
   }
+}
 
-  function chooseServer(team){
-    currentServer = team;
-    if(team=="A"){teamA.serve=1;teamB.serve=0;}
-    else {teamB.serve=1;teamA.serve=0;}
+function chooseServer(team){
+  currentServer=team;
+  if(team=="A"){teamA.serve=1;teamB.serve=0;}
+  else {teamB.serve=1;teamA.serve=0;}
+}
+function changeServe(team,delta){
+  if(team=="A" && currentServer=="A"){
+    teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2);
+    if(teamA.serve==0){teamB.serve=2;currentServer="B";}
   }
-  function changeServe(team,delta){
-    if(team=="A" && currentServer=="A"){
-      teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2);
-      if(teamA.serve==0){teamB.serve=2;currentServer="B";}
-    }
-    if(team=="B" && currentServer=="B"){
-      teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2);
-      if(teamB.serve==0){teamA.serve=2;currentServer="A";}
-    }
+  if(team=="B" && currentServer=="B"){
+    teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2);
+    if(teamB.serve==0){teamA.serve=2;currentServer="A";}
   }
-  function changeScore(team,delta){
-    if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
-    if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0);
-  }
+}
+function changeScore(team,delta){
+  if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
+  if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0);
+}
 
-  function startRecording(){
-    chunks=[];
-    recorder=new MediaRecorder(stream);
-    recorder.ondataavailable=e=>chunks.push(e.data);
-    recorder.onstop=saveRecording;
-    recorder.start();
-    liveIndicator.style.display="block";
-  }
-  function stopRecording(){
-    recorder.stop();
-    stream.getTracks().forEach(t=>t.stop());
-    liveIndicator.style.display="none";
-  }
-  function saveRecording(){
-    const blob=new Blob(chunks,{type:"video/webm"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    a.href=url;a.download="match.webm";a.click();
-  }
-  function captureFrame(){
-    const a=document.createElement("a");
-    a.href=canvas.toDataURL("image/png");
-    a.download="frame.png";a.click();
-  }
+// ghi hình
+function startRecording(){
+  chunks=[];
+  recorder=new MediaRecorder(stream);
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.onstop=saveRecording;
+  recorder.start();
+  liveIndicator.style.display="block";
+}
+function stopRecording(){
+  if(recorder && recorder.state!="inactive") recorder.stop();
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  liveIndicator.style.display="none";
+}
+function saveRecording(){
+  const blob=new Blob(chunks,{type:"video/webm"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="match.webm"; a.click();
+}
+function captureFrame(){
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download="frame.png"; a.click();
+}
 </script>
 </body>
 </html>
