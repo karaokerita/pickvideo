@@ -2,43 +2,43 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>Pickleball Recorder (iPhone friendly)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Pickleball Recorder - iPhone friendly</title>
 <style>
 :root{
   --bg:#041018; --card:#07202a; --muted:#9fb3bf; --accent:#06b6d4; --good:#22c55e; --danger:#ef4444;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,#021017,#041018);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#fff}
-.container{max-width:980px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.container{max-width:420px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;align-items:center}
 .header{width:100%;display:flex;justify-content:space-between;align-items:center}
-.title{font-size:18px;margin:0}
+.title{font-size:16px;margin:0}
 .subtitle{font-size:12px;color:var(--muted)}
-.stage{position:relative;width:100%;max-width:620px;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,0.03)}
+.stage{position:relative;width:100%;max-width:420px;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,0.03)}
 canvas{width:100%;height:100%;display:block}
-.live-dom{position:absolute;top:12px;left:12px;z-index:40;padding:6px 10px;border-radius:20px;background:rgba(0,0,0,0.45);display:flex;align-items:center;gap:8px}
-.live-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.9);animation:blink 1s infinite}
-@keyframes blink{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}
-.controls{width:100%;max-width:920px;display:flex;flex-direction:column;gap:8px}
-.card{background:var(--card);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:8px}
-.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
-.input{padding:10px;border-radius:10px;border:none;background:#022a34;color:#e6f7fb;font-size:15px;text-align:center;min-width:88px}
-.btn{padding:10px 12px;border-radius:12px;border:none;background:#0b3942;color:#e6f7fb;font-weight:700;font-size:15px;cursor:pointer;min-width:88px}
-.btn.primary{background:var(--accent);color:#012226}
-.btn.good{background:var(--good);color:#012a12}
-.btn.danger{background:var(--danger);color:#2b0200}
-.small{padding:8px 10px;min-width:68px;font-size:14px}
-.team-name{font-weight:700;font-size:14px;min-width:100px;text-align:center}
-.score{font-weight:800;font-size:28px;min-width:60px;text-align:center}
-.muted{color:var(--muted);font-size:13px}
-footer{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
 
-/* Mobile fine-tune */
-@media (max-width:420px){
-  .stage{max-width:100vw}
-  .team-name{min-width:70px}
-  .btn{min-width:64px;font-size:14px}
-  .score{font-size:22px}
+/* Live DOM indicator (not recorded) */
+.live-dom{position:absolute;top:10px;left:10px;z-index:50;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,0.45);display:flex;align-items:center;gap:8px;pointer-events:none}
+.live-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.9);animation:blink 1s infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+
+.controls{width:100%;display:flex;flex-direction:column;gap:8px}
+.card{background:var(--card);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.input{padding:10px;border-radius:8px;border:none;background:#022a34;color:#e6f7fb;font-size:15px;text-align:center;min-width:90px;flex:1}
+.btn{padding:10px 12px;border-radius:10px;border:none;background:#0b3942;color:#e6f7fb;font-weight:700;font-size:15px;cursor:pointer;min-width:80px}
+.btn.primary{background:var(--accent);color:#012226}
+.btn.good{background:var(--good);color:#00260a}
+.btn.danger{background:var(--danger);color:#2b0200}
+.small{padding:8px 10px;min-width:64px;font-size:14px}
+.team-name{font-weight:700;font-size:14px;min-width:80px;text-align:center}
+.score{font-weight:800;font-size:24px;min-width:48px;text-align:center}
+.muted{color:var(--muted);font-size:13px;text-align:center}
+.footer{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+@media (max-width:380px){
+  .score{font-size:20px}
+  .input{font-size:14px}
+  .btn{font-size:14px;min-width:60px}
 }
 </style>
 </head>
@@ -47,7 +47,7 @@ footer{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
   <div class="header">
     <div>
       <h1 class="title">Pickleball Recorder</h1>
-      <div class="subtitle">Khung nhỏ cho quay ngang • Mặc định camera sau (góc rộng nếu có)</div>
+      <div class="subtitle">Khung nhỏ cho quay ngang • Ưu tiên camera sau (góc rộng nếu có)</div>
     </div>
     <div id="status" class="subtitle">Trạng thái: chờ</div>
   </div>
@@ -55,101 +55,84 @@ footer{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
   <div class="stage" id="stage">
     <canvas id="canvas"></canvas>
 
-    <!-- Live indicator (DOM overlay) - NOT recorded into the video -->
-    <div class="live-dom" id="liveDom" style="display:none;pointer-events:none;">
+    <!-- LIVE indicator (DOM overlay, NOT recorded) -->
+    <div class="live-dom" id="liveDom" style="display:none">
       <div class="live-dot"></div>
       <div class="muted">LIVE</div>
     </div>
   </div>
 
   <div class="controls">
-    <!-- Team + serve info -->
     <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <input id="teamA" class="input" type="text" value="Team A" />
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="text-align:center">
-            <div class="muted">Đội A</div>
-            <div id="teamAName" class="team-name">Team A</div>
-          </div>
-          <div style="text-align:center">
-            <div class="muted">Điểm</div>
-            <div id="scoreA" class="score">0</div>
-          </div>
-          <div style="text-align:center">
-            <div class="muted">Serve left</div>
-            <div id="serveA" class="muted">2</div>
-          </div>
+      <div class="row" style="width:100%;">
+        <input id="teamA" class="input" placeholder="Tên đội A" value="Team A"/>
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:100px">
+          <div class="muted">Đội A</div>
+          <div id="scoreA" class="score">0</div>
+          <div class="muted">Serve left</div>
+          <div id="serveA" class="muted">2</div>
         </div>
-        <input id="teamB" class="input" type="text" value="Team B" />
       </div>
 
-      <div class="row" style="justify-content:center;margin-top:6px">
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <div class="muted">Chọn đội đang giao</div>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button id="serveAButton" class="btn small">A giao</button>
-            <button id="serveBButton" class="btn small">B giao</button>
-          </div>
+      <div class="row" style="width:100%;">
+        <input id="teamB" class="input" placeholder="Tên đội B" value="Team B"/>
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:100px">
+          <div class="muted">Đội B</div>
+          <div id="scoreB" class="score">0</div>
+          <div class="muted">Serve left</div>
+          <div id="serveB" class="muted">2</div>
         </div>
+      </div>
 
-        <div style="display:flex;flex-direction:column;align-items:center;margin-left:8px">
-          <div class="muted">Điều chỉnh lượt giao</div>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <button id="decServeA" class="btn small danger">A -1</button>
-            <button id="resetServes" class="btn small">Reset lượt</button>
-            <button id="decServeB" class="btn small danger">B -1</button>
-          </div>
-        </div>
+      <div class="row" style="justify-content:center">
+        <button id="serveAButton" class="btn small">A giao</button>
+        <button id="serveBButton" class="btn small">B giao</button>
+        <button id="decServeA" class="btn small danger">A -1</button>
+        <button id="decServeB" class="btn small danger">B -1</button>
+        <button id="resetServes" class="btn small">Reset lượt</button>
+      </div>
 
-        <div style="display:flex;flex-direction:column;align-items:center;margin-left:8px">
-          <div class="muted">Điểm</div>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <button id="aMinus" class="btn small">A −</button>
-            <button id="aPlus" class="btn small good">A +</button>
-            <button id="bMinus" class="btn small">B −</button>
-            <button id="bPlus" class="btn small good">B +</button>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;align-items:center;margin-left:8px">
-          <div class="muted">Khác</div>
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <button id="swapSides" class="btn small">Đổi sân</button>
-            <button id="resetAll" class="btn small">Reset</button>
-          </div>
-        </div>
+      <div class="row" style="justify-content:center">
+        <button id="aMinus" class="btn small">A −</button>
+        <button id="aPlus" class="btn small good">A +</button>
+        <button id="bMinus" class="btn small">B −</button>
+        <button id="bPlus" class="btn small good">B +</button>
+        <button id="swapSides" class="btn small">Đổi sân</button>
+        <button id="resetAll" class="btn small">Reset</button>
       </div>
     </div>
 
-    <!-- Recording controls -->
     <div class="card" style="justify-content:center">
-      <div class="row">
+      <div class="row" style="justify-content:center">
         <button id="btnInitCamera" class="btn primary">Bật camera</button>
         <button id="btnStartRec" class="btn good">Bắt đầu ghi</button>
         <button id="btnStopRec" class="btn small" disabled> Dừng </button>
-        <button id="btnDownload" class="btn small" disabled> Tải video </button>
-        <button id="btnScreenshot" class="btn small"> Chụp khung </button>
-        <button id="btnToggleLive" class="btn small"> Bật LIVE (chỉ hiển thị) </button>
+      </div>
+
+      <div class="row" style="justify-content:center">
+        <button id="btnDownload" class="btn small" disabled>Tải video</button>
+        <button id="btnSave" class="btn small" disabled>Lưu (tải)</button>
+        <button id="btnScreenshot" class="btn small">Chụp khung</button>
+      </div>
+
+      <div class="row" style="justify-content:center">
+        <label class="muted" style="font-size:13px">Live indicator là DOM — không ghi vào video</label>
       </div>
     </div>
   </div>
 
-  <footer>Ghi video từ canvas + micro. LIVE indicator không nằm trong video.</footer>
+  <div class="footer">Ghi video từ canvas + micro • Serve dots vẽ trong canvas (có trong file)</div>
 </div>
 
 <script>
-/* ====== Elements & state ====== */
+/* ---------- Elements & state ---------- */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { alpha: false });
-const stage = document.getElementById('stage');
 const liveDom = document.getElementById('liveDom');
 const statusEl = document.getElementById('status');
 
 const teamAInput = document.getElementById('teamA');
 const teamBInput = document.getElementById('teamB');
-const teamAName = document.getElementById('teamAName');
-const teamBName = document.getElementById('teamBName');
 const scoreAEl = document.getElementById('scoreA');
 const scoreBEl = document.getElementById('scoreB');
 const serveAEl = document.getElementById('serveA');
@@ -159,14 +142,15 @@ const btnInitCamera = document.getElementById('btnInitCamera');
 const btnStartRec = document.getElementById('btnStartRec');
 const btnStopRec = document.getElementById('btnStopRec');
 const btnDownload = document.getElementById('btnDownload');
+const btnSave = document.getElementById('btnSave');
 const btnScreenshot = document.getElementById('btnScreenshot');
-const btnToggleLive = document.getElementById('btnToggleLive');
 
 const serveAButton = document.getElementById('serveAButton');
 const serveBButton = document.getElementById('serveBButton');
 const decServeA = document.getElementById('decServeA');
 const decServeB = document.getElementById('decServeB');
 const resetServes = document.getElementById('resetServes');
+
 const aPlus = document.getElementById('aPlus');
 const aMinus = document.getElementById('aMinus');
 const bPlus = document.getElementById('bPlus');
@@ -182,42 +166,45 @@ let videoStream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let mixedStream = null;
-
 let canvasW = 1280, canvasH = 720;
 let rafId = null;
 
-/* match state */
 let scoreA = 0, scoreB = 0;
 let serveLeftA = 2, serveLeftB = 2;
 let serving = 'A'; // 'A' or 'B'
-let leftIsA = true; // controls which team is drawn left/right for swap
+let leftIsA = true;
 let recStartTime = null;
 
-/* ====== Helpers ====== */
-function setStatus(txt){ statusEl.textContent = 'Trạng thái: ' + txt; }
+/* helpers */
+function setStatus(s){ statusEl.textContent = 'Trạng thái: ' + s; }
+function clamp(v, lo=0, hi=999){ return Math.max(lo, Math.min(hi, v)); }
 function updateUI(){
-  teamAName.textContent = teamAInput.value || 'Team A';
-  teamBName.textContent = teamBInput.value || 'Team B';
   scoreAEl.textContent = scoreA;
   scoreBEl.textContent = scoreB;
   serveAEl.textContent = serveLeftA;
   serveBEl.textContent = serveLeftB;
+  // dec buttons enabled only if they belong to serving team
+  decServeA.disabled = (serving !== 'A');
+  decServeB.disabled = (serving !== 'B');
+  // But allow the other team's dec only when this team's serveLeft == 0 (per your rule)
+  if(serving === 'A'){
+    decServeB.disabled = !(serveLeftA === 0);
+  } else {
+    decServeA.disabled = !(serveLeftB === 0);
+  }
   btnStartRec.disabled = !videoStream;
 }
-function clamp(v, lo=0, hi=999){ return Math.max(lo, Math.min(hi, v)); }
 
-/* ====== Camera init (prefer environment / rear camera) ====== */
+/* camera init (prefer rear environment, try to request wide) */
 async function initCamera(){
-  setStatus('Đang thử camera...');
-  try {
-    // Prefer exact environment (rear). Browser may reject exact constraint -> fallback
-    try {
+  setStatus('Đang mở camera...');
+  try{
+    try{
       videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'environment' }, width:{ ideal: 1920 }, height:{ ideal:1080 } },
+        video: { facingMode: { exact: 'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } },
         audio: true
       });
-    } catch(e) {
-      // fallback to environment without exact, or any available camera
+    } catch(e){
       videoStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width:{ ideal:1280 }, height:{ ideal:720 } },
         audio: true
@@ -226,7 +213,7 @@ async function initCamera(){
     videoEl.srcObject = videoStream;
     await videoEl.play();
 
-    // set canvas size from actual video stream
+    // set canvas size from stream
     canvasW = videoEl.videoWidth || 1280;
     canvasH = videoEl.videoHeight || 720;
     canvas.width = canvasW;
@@ -237,134 +224,134 @@ async function initCamera(){
     updateUI();
   } catch(err){
     console.error(err);
-    setStatus('Không mở được camera: ' + (err.message || err));
+    setStatus('Lỗi mở camera: ' + (err.message || err));
   }
 }
 
-/* ====== Draw loop (this canvas is recorded) ====== */
+/* draw loop (canvas - recorded) */
 function startDrawLoop(){
   if(rafId) cancelAnimationFrame(rafId);
-
   function draw(){
-    // draw frame or black if not ready
     if(videoEl.readyState >= 2){
       ctx.drawImage(videoEl, 0, 0, canvasW, canvasH);
     } else {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0,0,canvasW,canvasH);
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvasW,canvasH);
     }
 
-    // scoreboard area (center top)
+    // scoreboard center-top
     const pad = Math.round(canvasW * 0.01);
     const boxW = Math.round(canvasW * 0.62);
     const boxH = Math.round(canvasH * 0.18);
-    const x = Math.round((canvasW - boxW) / 2);
+    const x = Math.round((canvasW - boxW)/2);
     const y = pad;
 
-    // background rounded box
     ctx.save();
-    ctx.globalAlpha = 0.86;
+    ctx.globalAlpha = 0.9;
     ctx.fillStyle = '#041f26';
     roundRect(ctx, x, y, boxW, boxH, 14, true, false);
     ctx.restore();
 
-    // names (left/right depending on leftIsA)
+    // names
     ctx.textAlign = 'center';
     const nameFont = Math.max(16, Math.round(canvasW * 0.03));
     ctx.font = `700 ${nameFont}px system-ui, Arial`;
     ctx.fillStyle = '#e6f7fb';
     const leftName = leftIsA ? (teamAInput.value||'Team A') : (teamBInput.value||'Team B');
     const rightName = leftIsA ? (teamBInput.value||'Team B') : (teamAInput.value||'Team A');
-    ctx.fillText(leftName, x + boxW * 0.25, y + Math.round(nameFont * 1.0));
-    ctx.fillText(rightName, x + boxW * 0.75, y + Math.round(nameFont * 1.0));
+    ctx.fillText(leftName, x + boxW*0.25, y + Math.round(nameFont*1.0));
+    ctx.fillText(rightName, x + boxW*0.75, y + Math.round(nameFont*1.0));
 
     // scores
-    const scoreFont = Math.max(34, Math.round(canvasW * 0.06));
+    const scoreFont = Math.max(32, Math.round(canvasW * 0.06));
     ctx.font = `800 ${scoreFont}px system-ui, Arial`;
     ctx.fillStyle = '#22c55e';
     const leftScore = leftIsA ? scoreA : scoreB;
     const rightScore = leftIsA ? scoreB : scoreA;
-    ctx.fillText(leftScore.toString(), x + boxW * 0.25, y + Math.round(nameFont * 1.0 + scoreFont * 0.98));
-    ctx.fillText(rightScore.toString(), x + boxW * 0.75, y + Math.round(nameFont * 1.0 + scoreFont * 0.98));
+    ctx.fillText(leftScore.toString(), x + boxW*0.25, y + Math.round(nameFont + scoreFont*0.95));
+    ctx.fillText(rightScore.toString(), x + boxW*0.75, y + Math.round(nameFont + scoreFont*0.95));
 
-    // serve dots (drawn on canvas so recorded)
+    // Serve dots (drawn into canvas so recorded)
     const dotSize = Math.max(7, Math.round(canvasW * 0.008));
     ctx.fillStyle = '#ef4444';
-    const servingCount = serving === 'A' ? serveLeftA : serveLeftB;
-    const serveOnLeft = (serving === 'A') === leftIsA; // if A is left and serving A -> true
-    const baseX = serveOnLeft ? (x + boxW * 0.12) : (x + boxW * 0.88);
-    const baseY = y + Math.round(nameFont * 0.22);
-    for(let i=0;i<servingCount;i++){
-      const shift = (i - (servingCount-1)/2) * (dotSize * 2.8);
-      ctx.beginPath();
-      ctx.arc(baseX + shift, baseY, dotSize, 0, Math.PI*2);
-      ctx.fill();
+    const count = serving === 'A' ? serveLeftA : serveLeftB;
+    const serveOnLeft = (serving === 'A') === leftIsA;
+    const baseX = serveOnLeft ? (x + boxW*0.12) : (x + boxW*0.88);
+    const baseY = y + Math.round(nameFont*0.2);
+    for(let i=0;i<count;i++){
+      const shift = (i - (count-1)/2) * (dotSize*2.8);
+      ctx.beginPath(); ctx.arc(baseX + shift, baseY, dotSize, 0, Math.PI*2); ctx.fill();
     }
 
-    // timer (if recording) or time-of-day (if not)
+    // timer (mm:ss) — recorded
     const subFont = Math.max(12, Math.round(canvasW * 0.015));
     ctx.font = `500 ${subFont}px system-ui, Arial`;
     ctx.fillStyle = '#cbd5e1';
     const timeStr = recStartTime ? formatElapsed(recStartTime) : new Date().toLocaleTimeString();
-    ctx.fillText(timeStr, x + boxW/2, y + boxH - Math.round(subFont * 0.15));
+    ctx.fillText(timeStr, x + boxW/2, y + boxH - Math.round(subFont*0.15));
 
     rafId = requestAnimationFrame(draw);
   }
   draw();
 }
 
-/* rounded rect helper */
-function roundRect(ctx, x, y, w, h, r, fill, stroke) {
-  if (typeof r === 'undefined') r = 5;
-  if (typeof r === 'number') r = {tl:r, tr:r, br:r, bl:r};
+/* helper roundRect */
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  if(typeof r==='undefined') r=5;
+  if(typeof r==='number') r={tl:r,tr:r,br:r,bl:r};
   ctx.beginPath();
-  ctx.moveTo(x + r.tl, y);
-  ctx.lineTo(x + w - r.tr, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-  ctx.lineTo(x + w, y + h - r.br);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-  ctx.lineTo(x + r.bl, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-  ctx.lineTo(x, y + r.tl);
-  ctx.quadraticCurveTo(x, y, x + r.tl, y);
+  ctx.moveTo(x+r.tl,y);
+  ctx.lineTo(x+w-r.tr,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r.tr);
+  ctx.lineTo(x+w,y+h-r.br);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
+  ctx.lineTo(x+r.bl,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r.bl);
+  ctx.lineTo(x,y+r.tl);
+  ctx.quadraticCurveTo(x,y,x+r.tl,y);
   ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
 }
 
-/* ====== Recording (canvas + mic) ====== */
+/* Recording: canvas + audio */
 function startRecording(){
   if(!videoStream){ setStatus('Chưa có camera'); return; }
-  if(mediaRecorder && mediaRecorder.state === 'recording'){ setStatus('Đang ghi'); return; }
+  if(mediaRecorder && mediaRecorder.state==='recording'){ setStatus('Đang ghi'); return; }
 
   const canvasStream = canvas.captureStream(30);
   const audioTracks = videoStream.getAudioTracks();
   mixedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
 
   recordedChunks = [];
-  const opts = supportedMime();
+  const opts = getSupportedMime();
   try { mediaRecorder = new MediaRecorder(mixedStream, opts); }
   catch(e) { mediaRecorder = new MediaRecorder(mixedStream); }
 
   mediaRecorder.ondataavailable = e => { if(e.data && e.data.size) recordedChunks.push(e.data); };
-  mediaRecorder.onstop = () => { btnDownload.disabled = recordedChunks.length === 0; setStatus('Ghi xong'); };
+  mediaRecorder.onstop = () => { btnDownload.disabled = recordedChunks.length===0; btnSave.disabled = recordedChunks.length===0; setStatus('Ghi xong'); };
 
   mediaRecorder.start(1000);
   recStartTime = Date.now();
   setStatus('Đang ghi…');
+  // show LIVE DOM indicator (not recorded)
+  liveDom.style.display = 'flex';
+
   btnStartRec.disabled = true;
   btnStopRec.disabled = false;
   btnDownload.disabled = true;
+  btnSave.disabled = true;
 }
 
 function stopRecording(){
-  if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
   recStartTime = null;
   setStatus('Dừng ghi');
+  liveDom.style.display = 'none';
   btnStartRec.disabled = false;
   btnStopRec.disabled = true;
 }
 
+/* download/save */
 function downloadRecording(){
   if(!recordedChunks.length) return;
   const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'video/webm' });
@@ -379,6 +366,12 @@ function downloadRecording(){
   setStatus('Tải video xong');
 }
 
+/* Save (same as download but also shows saving flow maybe) */
+function saveRecording(){
+  downloadRecording();
+}
+
+/* screenshot */
 function screenshot(){
   canvas.toBlob(blob => {
     const url = URL.createObjectURL(blob);
@@ -390,13 +383,14 @@ function screenshot(){
   }, 'image/png');
 }
 
-function supportedMime(){
+/* mime helper */
+function getSupportedMime(){
   const types = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   for(const t of types) if(MediaRecorder.isTypeSupported(t)) return { mimeType: t };
   return {};
 }
 
-/* ====== Time formatting ====== */
+/* time formatting */
 function formatElapsed(startMs){
   const ms = Date.now() - startMs;
   const m = Math.floor(ms / 60000);
@@ -404,41 +398,38 @@ function formatElapsed(startMs){
   return `${m}:${String(s).padStart(2,'0')}`;
 }
 
-/* ====== Serve & score logic ====== */
+/* serve & score logic */
 function setServing(team){
   serving = team;
+  // when set serving, ensure dec buttons state updated
   updateUI();
 }
 function decServe(team){
   if(team === 'A'){
     serveLeftA = Math.max(0, serveLeftA - 1);
-    if(serveLeftA === 0){ serving = 'B'; serveLeftB = 2; }
+    if(serveLeftA === 0){
+      // when A's serves exhausted, B's dec can be enabled per rule
+      serving = 'B';
+      serveLeftB = serveLeftB; // B unchanged; decServeB will be enabled by updateUI
+    }
   } else {
     serveLeftB = Math.max(0, serveLeftB - 1);
-    if(serveLeftB === 0){ serving = 'A'; serveLeftA = 2; }
+    if(serveLeftB === 0){
+      serving = 'A';
+      serveLeftA = serveLeftA;
+    }
   }
   updateUI();
 }
 function resetServesAll(){ serveLeftA = 2; serveLeftB = 2; updateUI(); }
 
-/* ====== UI wiring ====== */
+/* wiring */
 btnInitCamera.addEventListener('click', initCamera);
 btnStartRec.addEventListener('click', startRecording);
 btnStopRec.addEventListener('click', stopRecording);
 btnDownload.addEventListener('click', downloadRecording);
+btnSave.addEventListener('click', saveRecording);
 btnScreenshot.addEventListener('click', screenshot);
-
-btnToggleLive.addEventListener('click', ()=>{
-  if(liveDom.style.display === 'none' || liveDom.style.display === ''){
-    liveDom.style.display = 'flex';
-    btnToggleLive.textContent = 'LIVE: ON (chỉ hiển thị)';
-    btnToggleLive.style.background = 'rgba(239,68,68,0.95)';
-  } else {
-    liveDom.style.display = 'none';
-    btnToggleLive.textContent = 'Bật LIVE (chỉ hiển thị)';
-    btnToggleLive.style.background = '';
-  }
-});
 
 serveAButton.addEventListener('click', ()=> setServing('A'));
 serveBButton.addEventListener('click', ()=> setServing('B'));
@@ -446,36 +437,26 @@ decServeA.addEventListener('click', ()=> decServe('A'));
 decServeB.addEventListener('click', ()=> decServe('B'));
 resetServes.addEventListener('click', ()=> { resetServesAll(); setStatus('Lượt giao reset'); });
 
-aPlus.addEventListener('click', ()=> { scoreA = clamp(scoreA + 1,0,999); updateUI(); });
-aMinus.addEventListener('click', ()=> { scoreA = clamp(scoreA - 1,0,999); updateUI(); });
-bPlus.addEventListener('click', ()=> { scoreB = clamp(scoreB + 1,0,999); updateUI(); });
-bMinus.addEventListener('click', ()=> { scoreB = clamp(scoreB - 1,0,999); updateUI(); });
+aPlus.addEventListener('click', ()=> { scoreA = clamp(scoreA + 1); updateUI(); });
+aMinus.addEventListener('click', ()=> { scoreA = clamp(scoreA - 1); updateUI(); });
+bPlus.addEventListener('click', ()=> { scoreB = clamp(scoreB + 1); updateUI(); });
+bMinus.addEventListener('click', ()=> { scoreB = clamp(scoreB - 1); updateUI(); });
 
 swapSides.addEventListener('click', ()=> { leftIsA = !leftIsA; updateUI(); });
 resetAll.addEventListener('click', ()=> {
   scoreA = 0; scoreB = 0; serveLeftA = 2; serveLeftB = 2; serving = 'A'; leftIsA = true; recStartTime = null;
   updateUI(); setStatus('Đã reset');
 });
-
 teamAInput.addEventListener('input', updateUI);
 teamBInput.addEventListener('input', updateUI);
 
-/* init UI */
+/* initial UI */
 updateUI();
 
-/* Warm up / permissions hint (do not start camera automatically) */
-(async function warm(){
-  try {
-    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-      // prompt minimal permission (some browsers require gesture to show labels, so we don't hold stream)
-      await navigator.mediaDevices.getUserMedia({ video:true, audio:false })
-        .then(s => { s.getTracks().forEach(t => t.stop()); })
-        .catch(()=>{});
-    }
-  } catch(e){}
-})();
+/* warm permissions (optional) */
+(async function warm(){ try{ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){ await navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(s=>s.getTracks().forEach(t=>t.stop())).catch(()=>{}); } }catch(e){} })();
 
-/* Clean up on unload */
+/* cleanup */
 window.addEventListener('beforeunload', ()=> {
   if(videoStream) videoStream.getTracks().forEach(t=>t.stop());
   if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
