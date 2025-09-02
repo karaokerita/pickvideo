@@ -5,91 +5,21 @@
 <title>Ghi hình thi đấu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body {
-  margin:0; padding:0;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: row;
-  height: 100vh;
-  background: #111;
-  color: white;
-}
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex:1;
-  max-width: 360px;
-  background: #000;
-  position: relative;
-}
-canvas {
-  width: 100%;
-  aspect-ratio: 16/9;
-  background: #000;
-  border: 2px solid #444;
-}
-.controls-bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap:6px;
-  padding:6px;
-  font-size:12px;
-}
-.controls-bottom input, .controls-bottom select {
-  width: 100%;
-  padding:4px;
-  font-size:12px;
-}
-.controls-bottom button {
-  padding:4px 6px;
-  font-size:12px;
-  margin:2px;
-  border-radius:6px;
-  border:none;
-  cursor:pointer;
-  background:#333;
-  color:white;
-}
-.controls-bottom button:hover {
-  background:#555;
-}
-.right-panel {
-  display:flex;
-  flex-direction:row;
-  justify-content:flex-start;
-  align-items:flex-start;
-  flex:1;
-  gap:10px;
-}
-.team {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  background:#222;
-  padding:6px;
-  border-radius:10px;
-  min-width:90px;
-}
-.team h3 {
-  margin:4px 0;
-  font-size:14px;
-}
-#liveIndicator {
-  position:absolute;
-  top:8px;
-  left:8px;
-  background:red;
-  color:white;
-  font-size:12px;
-  padding:2px 5px;
-  border-radius:4px;
-  display:none;
-}
+body { margin:0; padding:0; font-family: Arial, sans-serif; display: flex; flex-direction: row; height: 100vh; background: #111; color: white;}
+.left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative;}
+canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
+.controls-bottom { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; font-size:12px; }
+.controls-bottom input, .controls-bottom select { width:100%; padding:4px; font-size:12px; }
+.controls-bottom button { padding:4px 6px; font-size:12px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
+.controls-bottom button:hover { background:#555; }
+.right-panel { display:flex; flex-direction:row; justify-content:flex-start; align-items:flex-start; flex:1; gap:10px; }
+.team { display:flex; flex-direction:column; align-items:center; background:#222; padding:6px; border-radius:10px; min-width:90px; }
+.team h3 { margin:4px 0; font-size:14px; }
+#liveIndicator { position:absolute; top:8px; left:8px; background:red; color:white; font-size:12px; padding:2px 5px; border-radius:4px; display:none; }
 </style>
 </head>
 <body>
+
 <div class="left-panel">
   <div id="liveIndicator">● LIVE</div>
   <video id="camera" autoplay playsinline muted style="display:none"></video>
@@ -104,7 +34,7 @@ canvas {
       <option value="1080">1080p</option>
     </select>
     <div>
-      <button onclick="startRecording()">Ghi hình</button>
+      <button id="recordBtn" onclick="startRecording()">Ghi hình</button>
       <button onclick="stopRecording()">Kết thúc</button>
       <button onclick="captureFrame()">Chụp ảnh</button>
     </div>
@@ -135,6 +65,7 @@ const video = document.getElementById("camera");
 const canvas = document.getElementById("scoreboard");
 const ctx = canvas.getContext("2d");
 const liveIndicator = document.getElementById("liveIndicator");
+const recordBtn = document.getElementById("recordBtn");
 
 let stream, recorder, chunks=[];
 let teamA={name:"A", score:0, serve:0};
@@ -164,6 +95,7 @@ async function startCamera(){
       audio:true
     });
     video.srcObject = stream;
+    await video.play();
     drawScoreboard();
   } catch(e){ alert("Không mở được camera: "+e);}
 }
@@ -190,8 +122,6 @@ function drawScoreboard(){
   ctx.font="24px Arial";
 
   const midX = canvas.width/2;
-
-  // icon 🏆 + điểm ở giữa
   ctx.textAlign="center";
   ctx.fillText("🏆", midX, canvas.height-25);
   ctx.fillText(`${teamA.score} - ${teamB.score}`, midX, canvas.height-50);
@@ -237,26 +167,46 @@ function changeScore(team,delta){
 }
 
 function startRecording(){
+  if(!stream) { alert("Camera chưa sẵn sàng"); return; }
   chunks=[];
   recorder=new MediaRecorder(stream);
   recorder.ondataavailable=e=>chunks.push(e.data);
   recorder.start();
   liveIndicator.style.display="block";
+  recordBtn.style.background="red";
+  recordBtn.disabled=true;
 }
+
 function stopRecording(){
   if(recorder && recorder.state!="inactive"){
     recorder.onstop = () => {
       saveRecording();
       if(stream) stream.getTracks().forEach(t=>t.stop());
       liveIndicator.style.display="none";
+      recordBtn.style.background="#333";
+      recordBtn.disabled=false;
     };
     recorder.stop();
   } else if(stream){
     stream.getTracks().forEach(t=>t.stop());
     liveIndicator.style.display="none";
+    recordBtn.style.background="#333";
+    recordBtn.disabled=false;
   }
 }
+
 function saveRecording(){
   const blob=new Blob(chunks,{type:"video/webm"});
   const url=URL.createObjectURL(blob);
-  const a
+  const a=document.createElement("a");
+  a.href=url; a.download="match.webm"; a.click();
+}
+
+function captureFrame(){
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download="frame.png"; a.click();
+}
+</script>
+</body>
+</html>
