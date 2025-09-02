@@ -7,7 +7,7 @@
 <style>
 body { margin:0; padding:0; font-family: Arial, sans-serif; display:flex; flex-direction:row; height:100vh; background:#111; color:white; }
 .left-panel { display:flex; flex-direction:column; align-items:center; flex:1; max-width:360px; background:#000; position:relative; }
-canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
+video, canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; }
 .controls-bottom { display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; font-size:12px; }
 .controls-bottom select, .controls-bottom button { font-size:12px; padding:4px; margin:2px; border-radius:6px; border:none; cursor:pointer; background:#333; color:white; }
 .controls-bottom button:hover { background:#555; }
@@ -18,13 +18,14 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
 .team input { width:100px; }
 .team button:hover { background:#555; }
 #liveIndicator { position:absolute; top:8px; left:8px; background:red; color:white; font-size:12px; padding:2px 5px; border-radius:4px; display:none; }
+#progressContainer { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:none; background:rgba(0,0,0,0.7); padding:10px 20px; border-radius:10px; font-size:16px; }
 </style>
 </head>
 <body>
 
 <div class="left-panel">
   <div id="liveIndicator">● LIVE</div>
-  <video id="camera" autoplay playsinline muted style="display:none"></video>
+  <video id="camera" autoplay playsinline muted></video>
   <canvas id="scoreboard"></canvas>
 
   <div class="controls-bottom">
@@ -63,16 +64,24 @@ canvas { width:100%; aspect-ratio:16/9; background:#000; border:2px solid #444; 
   </div>
 </div>
 
+<div id="progressContainer">Convert video: 0%</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.8/dist/ffmpeg.min.js"></script>
 <script>
 const { createFFmpeg, fetchFile } = FFmpeg;
-const ffmpeg = createFFmpeg({ log:true });
+const ffmpeg = createFFmpeg({ log:true, progress: p => {
+    if(p && p.ratio!==undefined){
+        document.getElementById('progressContainer').style.display='block';
+        document.getElementById('progressContainer').innerText = `Convert video: ${Math.floor(p.ratio*100)}%`;
+    }
+}});
 
 const video = document.getElementById("camera");
 const canvas = document.getElementById("scoreboard");
 const ctx = canvas.getContext("2d");
 const liveIndicator = document.getElementById("liveIndicator");
 const recordBtn = document.getElementById("recordBtn");
+const progressContainer = document.getElementById("progressContainer");
 
 let stream, recorder, chunks=[];
 let teamA={name:"A", score:0, serve:0};
@@ -82,21 +91,6 @@ let currentServer=null;
 document.getElementById("teamAName").addEventListener("input", e=>{ teamA.name = e.target.value || "A"; });
 document.getElementById("teamBName").addEventListener("input", e=>{ teamB.name = e.target.value || "B"; });
 
-window.onload = () => startCamera();
-
-async function startCamera(){
-  const resolution = document.getElementById("resolution").value;
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:"environment", width: resolution=="1080"?1920:1280, height: resolution=="1080"?1080:720 },
-      audio:true
-    });
-    video.srcObject = stream;
-    await video.play();
-    drawScoreboard();
-  } catch(e){ alert("Không mở được camera: "+e);}
-}
-
 function drawScoreboard(){
   requestAnimationFrame(drawScoreboard);
   if(!video.videoWidth) return;
@@ -104,7 +98,6 @@ function drawScoreboard(){
   canvas.height = video.videoHeight;
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-  // Overlay tên giải
   ctx.fillStyle="rgba(0,0,100,0.6)";
   ctx.fillRect(0,0,canvas.width,50);
   ctx.fillStyle="white";
@@ -112,7 +105,6 @@ function drawScoreboard(){
   ctx.textAlign="center";
   ctx.fillText(document.getElementById("tournamentName").value, canvas.width/2,30);
 
-  // Bảng điểm
   ctx.fillStyle="rgba(0,0,100,0.6)";
   ctx.fillRect(0,canvas.height-60,canvas.width,60);
   ctx.fillStyle="white";
@@ -122,52 +114,53 @@ function drawScoreboard(){
   ctx.textAlign="center";
   ctx.fillText("🏆", midX, canvas.height-25);
   ctx.fillText(`${teamA.score} - ${teamB.score}`, midX, canvas.height-50);
+  ctx.textAlign="left"; ctx.fillText(teamA.name, midX-120, canvas.height-25);
+  ctx.textAlign="right"; ctx.fillText(teamB.name, midX+120, canvas.height-25);
 
-  ctx.textAlign="left";
-  ctx.fillText(teamA.name, midX - 120, canvas.height-25);
-  ctx.textAlign="right";
-  ctx.fillText(teamB.name, midX + 120, canvas.height-25);
-
-  // Chấm đỏ lượt giao
-  if(teamA.serve>0){ for(let i=0;i<teamA.serve;i++){ ctx.beginPath(); ctx.arc(60+i*15,canvas.height-40,6,0,2*Math.PI); ctx.fillStyle="red"; ctx.fill(); } }
-  if(teamB.serve>0){ for(let i=0;i<teamB.serve;i++){ ctx.beginPath(); ctx.arc(canvas.width-60-i*15,canvas.height-40,6,0,2*Math.PI); ctx.fillStyle="red"; ctx.fill(); } }
+  if(teamA.serve>0) for(let i=0;i<teamA.serve;i++){ ctx.beginPath(); ctx.arc(60+i*15,canvas.height-40,6,0,2*Math.PI); ctx.fillStyle="red"; ctx.fill(); }
+  if(teamB.serve>0) for(let i=0;i<teamB.serve;i++){ ctx.beginPath(); ctx.arc(canvas.width-60-i*15,canvas.height-40,6,0,2*Math.PI); ctx.fillStyle="red"; ctx.fill(); }
 }
 
-function chooseServer(team){ currentServer = team; if(team=="A"){ teamA.serve=1; teamB.serve=0; } else { teamB.serve=1; teamA.serve=0; } }
-function changeServe(team, delta){ if(team=="A" && currentServer=="A"){ teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2); if(teamA.serve==0){ teamB.serve=2; currentServer="B"; } } if(team=="B" && currentServer=="B"){ teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2); if(teamB.serve==0){ teamA.serve=2; currentServer="A"; } } }
-function changeScore(team, delta){ if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0); if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0); }
+function startCamera(){
+  if(stream) return Promise.resolve(); // đã bật
+  const resolution = document.getElementById("resolution").value;
+  return navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:"environment", width: resolution=="1080"?1920:1280, height: resolution=="1080"?1080:720 },
+    audio:true
+  }).then(s=>{
+    stream = s;
+    video.srcObject = stream;
+    return video.play();
+  }).catch(e=>alert("Không mở được camera: "+e));
+}
 
 function startRecording(){
-  if(!stream){ alert("Camera chưa sẵn sàng"); return; }
-  chunks=[];
-  recorder = new MediaRecorder(stream);
-  recorder.ondataavailable = e => chunks.push(e.data);
-  recorder.start();
-  liveIndicator.style.display="block";
-  recordBtn.style.background="red";
-  recordBtn.disabled=true;
+  startCamera().then(()=>{
+    chunks=[];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e=>chunks.push(e.data);
+    recorder.start();
+    liveIndicator.style.display="block";
+    recordBtn.style.background="red";
+    recordBtn.disabled=true;
+  });
 }
 
-async function stopRecording(){
-  if(recorder && recorder.state!="inactive"){
-    recorder.onstop = async () => {
-      liveIndicator.style.display="none";
-      recordBtn.style.background="#333";
-      recordBtn.disabled=false;
-      await convertWebMtoMP4(new Blob(chunks,{type:'video/webm'}));
-      if(stream) stream.getTracks().forEach(t=>t.stop());
-    };
-    recorder.stop();
-  } else if(stream){
-    stream.getTracks().forEach(t=>t.stop());
+function stopRecording(){
+  if(!recorder) return;
+  recorder.onstop = async ()=>{
     liveIndicator.style.display="none";
     recordBtn.style.background="#333";
     recordBtn.disabled=false;
-  }
+    await convertWebMtoMP4(new Blob(chunks,{type:'video/webm'}));
+    stream.getTracks().forEach(t=>t.stop());
+    stream = null;
+  };
+  recorder.stop();
 }
 
 async function convertWebMtoMP4(webmBlob){
-  alert("Đang convert video sang MP4, vui lòng chờ...");
+  progressContainer.style.display='block';
   if(!ffmpeg.isLoaded()) await ffmpeg.load();
   ffmpeg.FS('writeFile','input.webm', await fetchFile(webmBlob));
   await ffmpeg.run('-i','input.webm','-c:v','libx264','-c:a','aac','output.mp4');
@@ -177,15 +170,23 @@ async function convertWebMtoMP4(webmBlob){
   const a = document.createElement('a');
   a.href = url; a.download='match.mp4';
   a.click();
+  progressContainer.style.display='none';
   alert("Convert xong! Bạn có thể lưu vào Photos trên iPhone.");
 }
 
 function captureFrame(){
-  const a=document.createElement("a");
-  a.href=canvas.toDataURL("image/png");
-  a.download="frame.png";
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download='frame.png';
   a.click();
 }
+
+// Team logic
+function chooseServer(team){ currentServer = team; if(team=="A"){ teamA.serve=1; teamB.serve=0; } else { teamB.serve=1; teamA.serve=0; } }
+function changeServe(team,delta){ if(team=="A" && currentServer=="A"){ teamA.serve=Math.min(Math.max(teamA.serve+delta,0),2); if(teamA.serve==0){ teamB.serve=2; currentServer="B"; } } if(team=="B" && currentServer=="B"){ teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2); if(teamB.serve==0){ teamA.serve=2; currentServer="A"; } } }
+function changeScore(team,delta){ if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0); if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0); }
+
+drawScoreboard();
 </script>
 </body>
 </html>
