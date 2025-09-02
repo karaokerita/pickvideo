@@ -92,10 +92,12 @@ let startTime = null;
 document.getElementById("teamAName").addEventListener("input", e=>{
   teamA.name = e.target.value || "A";
   document.getElementById("teamAHeader").innerText = teamA.name;
+  updateButtons();
 });
 document.getElementById("teamBName").addEventListener("input", e=>{
   teamB.name = e.target.value || "B";
   document.getElementById("teamBHeader").innerText = teamB.name;
+  updateButtons();
 });
 
 function drawScoreboard(){
@@ -155,11 +157,34 @@ async function startCamera(){
   } catch(e){ alert("Không mở được camera: "+e); }
 }
 
+// -------- Logic lượt giao & điểm ----------
+function updateButtons() {
+  // Team A
+  document.querySelectorAll("#teamAControls button").forEach(btn=>{
+    if(btn.textContent.includes("Giao")){
+      btn.disabled = !(currentServer=="A" || (currentServer==null && btn.textContent=="Chọn giao"));
+    }
+    if(btn.textContent.includes("Điểm")){
+      btn.disabled = teamA.serve<=0;
+    }
+  });
+  // Team B
+  document.querySelectorAll("#teamBControls button").forEach(btn=>{
+    if(btn.textContent.includes("Giao")){
+      btn.disabled = !(currentServer=="B" || (currentServer==null && btn.textContent=="Chọn giao"));
+    }
+    if(btn.textContent.includes("Điểm")){
+      btn.disabled = teamB.serve<=0;
+    }
+  });
+}
+
 function chooseServer(team){
-  if(currentServer) return; // chỉ 1 lần chọn
+  if(currentServer) return;
   currentServer = team;
   if(team=="A"){ teamA.serve=1; teamB.serve=0; }
   else { teamB.serve=1; teamA.serve=0; }
+  updateButtons();
 }
 
 function changeServe(team,delta){
@@ -171,13 +196,16 @@ function changeServe(team,delta){
     teamB.serve=Math.min(Math.max(teamB.serve+delta,0),2); 
     if(teamB.serve==0){ teamA.serve=2; currentServer="A"; }
   }
+  updateButtons();
 }
 
 function changeScore(team,delta){
   if(team=="A" && teamA.serve>0) teamA.score=Math.max(teamA.score+delta,0);
   if(team=="B" && teamB.serve>0) teamB.score=Math.max(teamB.score+delta,0);
+  updateButtons();
 }
 
+// -------- Ghi hình + convert MP4 ----------
 function startRecording(){
   if(!stream){ alert("Camera chưa sẵn sàng"); return; }
   chunks=[];
@@ -227,6 +255,7 @@ function captureFrame(){
 window.onload = () => {
   startCamera();
   drawScoreboard();
+  updateButtons();
 };
 </script>
 </body>
