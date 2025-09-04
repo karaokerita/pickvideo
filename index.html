@@ -1,135 +1,574 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Ghi hình Pickleball</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ghi hình Pickleball — Full</title>
 <style>
-  body { font-family: sans-serif; margin:0; display:flex; flex-direction:column; align-items:center; }
-  #container { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
-  video, canvas { max-width:320px; aspect-ratio:16/9; background:black; border-radius:12px; }
-  #controls { margin-top:10px; }
-  #liveIndicator {
-    position:absolute; top:10px; left:10px;
-    background:red; color:white; font-weight:bold;
-    padding:2px 6px; border-radius:6px; display:none;
+  :root{
+    --bg:#0f1113; --panel:#050607; --card:#17181a; --muted:#262729; --accent:rgba(0,64,160,.65);
+    --white:#fff; --danger:#e33;
   }
-  #videoWrapper { position:relative; }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:Inter,Arial,Helvetica,sans-serif}
+  .app{
+    display:flex; flex-direction:row; gap:12px; padding:10px; height:100vh; align-items:center; justify-content:center;
+  }
+
+  /* Left column: camera (fixed small width to match iPhone 15 landscape feel) */
+  .left {
+    flex:0 0 320px; max-width:320px; min-width:280px; display:flex; flex-direction:column; gap:8px; align-items:center;
+  }
+  .video-wrap{ position:relative; width:100%; }
+  video{ display:none } /* we use only canvas as visible single frame */
+  canvas{
+    width:100%; aspect-ratio:16/9; background:black; border-radius:10px; border:2px solid #222;
+    display:block;
+  }
+  #liveIndicator{
+    position:absolute; top:8px; left:8px; z-index:10;
+    background:var(--danger); color:var(--white); font-weight:700; padding:4px 8px; border-radius:999px; display:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.6);
+  }
+
+  .left .controls { width:100%; display:flex; flex-direction:column; gap:6px; }
+  .left .controls .row{ display:flex; gap:6px; }
+  input[type="text"], select, button{
+    background:var(--muted); color:var(--white); border:none; border-radius:8px; padding:8px; font-size:13px;
+  }
+  button:disabled{ opacity:.45; cursor:not-allowed }
+
+  .right {
+    flex:1; display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+  }
+  .panel{ background:var(--card); border-radius:12px; padding:10px; min-width:180px; display:flex; flex-direction:column; gap:8px; }
+  .panel h3{ margin:0; font-size:14px; text-align:center }
+  .group{ display:flex; flex-direction:column; gap:6px; }
+  .row{ display:flex; gap:6px; }
+
+  /* Downloads & progress */
+  #progress { display:none; background:rgba(0,0,0,.6); padding:8px 10px; border-radius:8px; text-align:center; font-size:13px }
+  .downloads a{ text-decoration:none; background:#0b8; color:#012; padding:8px 10px; border-radius:8px; display:none; font-weight:700 }
+
+  /* Responsive for narrow widths */
+  @media (max-width:900px){
+    .app{ flex-direction:column; align-items:center; padding:8px; gap:8px; }
+    .left{ order:1 }
+    .right{ order:2; width:100%; flex-direction:column; align-items:stretch; }
+  }
 </style>
 </head>
 <body>
+<div class="app">
+  <div class="left">
+    <div class="video-wrap">
+      <div id="liveIndicator">● LIVE</div>
+      <video id="camera" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+    </div>
 
-<h2>Ghi hình Pickleball</h2>
-<div id="container">
-  <div id="videoWrapper">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-    <div id="liveIndicator">● LIVE</div>
+    <div class="controls">
+      <input id="tournament" type="text" placeholder="Tên giải đấu (hiển thị trên canvas)">
+
+      <div class="row">
+        <select id="resolution">
+          <option value="720">720p</option>
+          <option value="1080">1080p</option>
+        </select>
+        <button id="openCamBtn">Mở camera</button>
+      </div>
+
+      <div class="row">
+        <button id="recordBtn">Ghi hình</button>
+        <button id="stopBtn" disabled>Kết thúc</button>
+        <button id="snapBtn">Chụp ảnh</button>
+      </div>
+
+      <div id="progress">Đang chuyển MP4: <span id="progPercent">0%</span></div>
+      <div class="row downloads">
+        <a id="dlWebm" download="pickleball.webm">Tải WebM</a>
+        <a id="dlMp4" download="pickleball.mp4">Tải MP4</a>
+      </div>
+      <div style="font-size:12px; opacity:.85; margin-top:6px;">
+        • Không phát âm thanh ra loa khi đang mở camera. • Mic được ghi vào video.
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <!-- Team A -->
+    <div class="panel" id="panelA">
+      <h3 id="titleA">Đội A</h3>
+      <div class="group">
+        <input id="nameA" type="text" placeholder="Tên đội A">
+        <div class="row">
+          <button id="chooseServerBtn">Chọn đội giao lần đầu</button>
+        </div>
+        <div class="row">
+          <button id="serveAplus">+ Lượt giao</button>
+          <button id="serveAminus">- Lượt giao</button>
+        </div>
+        <div class="row">
+          <button id="scoreAplus">+ Điểm</button>
+          <button id="scoreAminus">- Điểm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center scoreboard preview (just props) -->
+    <div class="panel" style="flex:0 0 240px; align-items:center;">
+      <h3>Bảng tỉ số</h3>
+      <div id="scorePreview" style="background:var(--accent); width:100%; border-radius:8px; padding:10px; text-align:center;">
+        <div id="scoreLine" style="font-size:18px; font-weight:700;">A | 0 🏆 0 | B</div>
+        <div style="font-size:12px; opacity:.9; margin-top:6px;">Serve indicator: chấm đỏ (1–2)</div>
+      </div>
+    </div>
+
+    <!-- Team B -->
+    <div class="panel" id="panelB">
+      <h3 id="titleB">Đội B</h3>
+      <div class="group">
+        <input id="nameB" type="text" placeholder="Tên đội B">
+        <div class="row">
+          <button id="serveBplus">+ Lượt giao</button>
+          <button id="serveBminus">- Lượt giao</button>
+        </div>
+        <div class="row">
+          <button id="scoreBplus">+ Điểm</button>
+          <button id="scoreBminus">- Điểm</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div id="controls">
-  <button id="startBtn">Bắt đầu ghi</button>
-  <button id="stopBtn" disabled>Dừng & tải video</button>
-  <button id="captureBtn">Chụp ảnh</button>
-</div>
+<!-- ffmpeg.wasm -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.8/dist/ffmpeg.min.js"></script>
 
 <script>
-let video = document.getElementById("video");
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
-let liveIndicator = document.getElementById("liveIndicator");
+(async ()=>{
 
-let mediaRecorder, recordedChunks = [];
-let recording = false;
-let animationFrameId;
+/* -----------------------
+   Elements
+------------------------*/
+const camera = document.getElementById('camera');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const liveIndicator = document.getElementById('liveIndicator');
+const openCamBtn = document.getElementById('openCamBtn');
+const resolutionEl = document.getElementById('resolution');
+const tournamentEl = document.getElementById('tournament');
 
-// Mở camera
-async function initCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" }, width:1280, height:720 },
-      audio: true
-    });
-    video.srcObject = stream;
-    await video.play();
-    resizeCanvas();
-    drawLoop();
-  } catch (err) {
-    console.error("Lỗi mở camera:", err);
-    alert("Không mở được camera: " + err.message);
+const recordBtn = document.getElementById('recordBtn');
+const stopBtn = document.getElementById('stopBtn');
+const snapBtn = document.getElementById('snapBtn');
+const progressBox = document.getElementById('progress');
+const progPercent = document.getElementById('progPercent');
+const dlWebm = document.getElementById('dlWebm');
+const dlMp4 = document.getElementById('dlMp4');
+
+const nameA = document.getElementById('nameA');
+const nameB = document.getElementById('nameB');
+const titleA = document.getElementById('titleA');
+const titleB = document.getElementById('titleB');
+const scoreLine = document.getElementById('scoreLine');
+
+const chooseServerBtn = document.getElementById('chooseServerBtn');
+const serveAplus = document.getElementById('serveAplus');
+const serveAminus = document.getElementById('serveAminus');
+const serveBplus = document.getElementById('serveBplus');
+const serveBminus = document.getElementById('serveBminus');
+const scoreAplus = document.getElementById('scoreAplus');
+const scoreAminus = document.getElementById('scoreAminus');
+const scoreBplus = document.getElementById('scoreBplus');
+const scoreBminus = document.getElementById('scoreBminus');
+
+/* -----------------------
+   State
+------------------------*/
+let camStream = null;
+let canvasStream = null;
+let recorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let startTime = null;
+let raf = null;
+
+/* Pickleball state */
+const state = {
+  A: { name: 'A', score: 0, serves: 0 },
+  B: { name: 'B', score: 0, serves: 0 },
+  initialChosen: false, // đã chọn đội giao lần đầu
+  current: null         // 'A' or 'B' or null
+};
+
+/* -----------------------
+   Helpers & UI updates
+------------------------*/
+function updateTitles(){
+  state.A.name = nameA.value.trim() || 'A';
+  state.B.name = nameB.value.trim() || 'B';
+  titleA.textContent = state.A.name;
+  titleB.textContent = state.B.name;
+  updateScorePreview();
+}
+
+function updateScorePreview(){
+  scoreLine.textContent = `${state.A.name} | ${state.A.score} 🏆 ${state.B.score} | ${state.B.name}`;
+}
+
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+function updateButtons(){
+  // choose initial server only if not chosen
+  chooseServerBtn.disabled = state.initialChosen;
+
+  // Determine who has serves
+  const aHas = state.A.serves > 0;
+  const bHas = state.B.serves > 0;
+
+  // Score buttons only active for team with serves
+  scoreAplus.disabled = !aHas;
+  scoreAminus.disabled = !aHas;
+  scoreBplus.disabled = !bHas;
+  scoreBminus.disabled = !bHas;
+
+  // Serve +/-
+  serveAplus.disabled = !state.initialChosen ? true : (state.A.serves >= 2);
+  serveAminus.disabled = !state.initialChosen ? true : (state.A.serves <= 0);
+  serveBplus.disabled = !state.initialChosen ? true : (state.B.serves >= 2);
+  serveBminus.disabled = !state.initialChosen ? true : (state.B.serves <= 0);
+
+  // When not chosen yet, disable serve/score controls
+  if(!state.initialChosen){
+    [serveAplus,serveAminus,serveBplus,serveBminus,scoreAplus,scoreAminus,scoreBplus,scoreBminus].forEach(b=> b.disabled = true);
+  }
+
+  // Visual: if a team is current server, you might style panel (left as extension)
+}
+
+/* -----------------------
+   Serve & Score logic
+   per user spec:
+   - 1 button to pick initial server (we show a small prompt to choose A or B)
+   - initial server gets 1 serve
+   - when a team's serves reduced to 0 -> other team gets 2 serves
+   - serve counts limited 0..2
+   - only team with serves can change their points
+------------------------*/
+function chooseInitialServerFlow(){
+  if(state.initialChosen) return;
+  // single button: ask user to choose A or B (small confirm UI)
+  const pick = window.prompt(`Chọn đội giao lần đầu (gõ A hoặc B). Mặc định gõ A nếu để trống:`, "A");
+  if(!pick) return;
+  const t = (pick.trim().toUpperCase() === 'B') ? 'B' : 'A';
+  state.initialChosen = true;
+  state.current = t;
+  state.A.serves = (t === 'A' ? 1 : 0);
+  state.B.serves = (t === 'B' ? 1 : 0);
+  startTime = Date.now(); // start timer when choose server?
+  updateButtons();
+  updateTitles();
+}
+
+function addServe(team){
+  if(!state.initialChosen) return;
+  state[team].serves = clamp(state[team].serves + 1, 0, 2);
+  updateButtons();
+}
+
+function subServe(team){
+  if(!state.initialChosen) return;
+  if(state[team].serves > 0){
+    state[team].serves = clamp(state[team].serves - 1, 0, 2);
+    if(state[team].serves === 0){
+      // switch to opponent with 2 serves
+      const other = team === 'A' ? 'B' : 'A';
+      state.current = other;
+      state[other].serves = 2;
+    }
+  }
+  updateButtons();
+}
+
+function addPoint(team){
+  if(state[team].serves <= 0) return;
+  state[team].score = Math.max(0, state[team].score + 1);
+  updateScorePreview();
+}
+
+function subPoint(team){
+  if(state[team].serves <= 0) return;
+  state[team].score = Math.max(0, state[team].score - 1);
+  updateScorePreview();
+}
+
+/* -----------------------
+   Drawing on canvas (video + overlays)
+   - Note: liveIndicator is DOM element not drawn into canvas
+------------------------*/
+function drawFrame(){
+  raf = requestAnimationFrame(drawFrame);
+  if(!camera.videoWidth) return;
+  // sync canvas size to video
+  canvas.width = camera.videoWidth;
+  canvas.height = camera.videoHeight;
+
+  // draw video frame
+  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+
+  // top tournament bar
+  ctx.fillStyle = "rgba(0,0,100,0.65)";
+  ctx.fillRect(0, 0, canvas.width, 50);
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(tournamentEl.value || "", canvas.width/2, 32);
+
+  // bottom scoreboard bar
+  const barH = 60;
+  ctx.fillStyle = "rgba(0,64,160,0.65)";
+  ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "24px Arial";
+  ctx.textAlign = "center";
+  const midX = canvas.width/2;
+
+  ctx.fillText(`${state.A.score}  🏆  ${state.B.score}`, midX, canvas.height - 34);
+
+  ctx.font = "18px Arial";
+  ctx.textAlign = "right";
+  ctx.fillText(state.A.name, midX - 24, canvas.height - 12);
+  ctx.textAlign = "left";
+  ctx.fillText(state.B.name, midX + 24, canvas.height - 12);
+
+  // serve indicators (red dots) for A (left) and B (right)
+  ctx.fillStyle = "red";
+  const dotR = 6;
+  if(state.A.serves > 0){
+    for(let i=0;i<state.A.serves;i++){
+      ctx.beginPath();
+      ctx.arc(40 + i*18, canvas.height - 36, dotR, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  if(state.B.serves > 0){
+    for(let i=0;i<state.B.serves;i++){
+      ctx.beginPath();
+      ctx.arc(canvas.width - 40 - i*18, canvas.height - 36, dotR, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // timer on top-right (mm:ss) if recording
+  if(isRecording && startTime){
+    const sec = Math.floor((Date.now() - startTime)/1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,'0');
+    const ss = String(sec%60).padStart(2,'0');
+    ctx.font = "18px Arial";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(`${mm}:${ss}`, canvas.width - 10, 32);
   }
 }
 
-function resizeCanvas() {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-}
-
-function drawLoop() {
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // ví dụ: vẽ đồng hồ thời gian nếu đang ghi
-  if(recording){
-    let t = Math.floor((Date.now()-startTime)/1000);
-    let m = String(Math.floor(t/60)).padStart(2,'0');
-    let s = String(t%60).padStart(2,'0');
-    ctx.fillStyle="rgba(0,0,0,0.5)";
-    ctx.fillRect(10, canvas.height-40, 80,30);
-    ctx.fillStyle="white";
-    ctx.font="20px sans-serif";
-    ctx.fillText(`${m}:${s}`, 20, canvas.height-20);
+/* -----------------------
+   Camera init & control
+------------------------*/
+async function openCamera(){
+  // stop old tracks
+  if(camStream){
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
   }
-
-  animationFrameId = requestAnimationFrame(drawLoop);
+  const want1080 = (resolutionEl.value === '1080');
+  const constraints = {
+    audio: { echoCancellation:true, noiseSuppression:true, sampleRate:44100 },
+    video: {
+      facingMode: { ideal: "environment" },
+      width: want1080 ? { ideal: 1920 } : { ideal: 1280 },
+      height: want1080 ? { ideal: 1080 } : { ideal: 720 },
+      frameRate: { ideal: 30, max: 30 }
+    }
+  };
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia(constraints);
+    camera.srcObject = camStream;
+    camera.muted = true;
+    await camera.play();
+    // start draw loop
+    if(!raf) drawFrame();
+    updateButtons();
+  }catch(err){
+    console.error('Không mở được camera:', err);
+    alert('Không mở được camera hoặc micro: ' + err.message);
+  }
 }
 
-let startTime=0;
+/* -----------------------
+   Recording (canvas + mic)
+------------------------*/
+function startRecording(){
+  if(isRecording) return;
+  if(!camStream){ alert('Chưa mở camera'); return; }
 
-document.getElementById("startBtn").onclick = ()=>{
-  let stream = canvas.captureStream(30); // lấy hình từ canvas
-  let audioTracks = video.srcObject.getAudioTracks();
-  if(audioTracks.length>0) stream.addTrack(audioTracks[0]);
+  // stop previous downloads' URLs
+  if(dlWebm.href) URL.revokeObjectURL(dlWebm.href);
+  if(dlMp4.href) URL.revokeObjectURL(dlMp4.href);
+  dlWebm.style.display = dlMp4.style.display = 'none';
 
-  mediaRecorder = new MediaRecorder(stream);
-  recordedChunks=[];
-  mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
-  mediaRecorder.onstop = saveVideo;
-  mediaRecorder.start();
+  // capture canvas stream and attach mic track (from camStream)
+  canvasStream = canvas.captureStream(30);
+  const audioTrack = camStream.getAudioTracks()[0];
+  if(audioTrack) canvasStream.addTrack(audioTrack);
 
-  startTime=Date.now();
-  recording=true;
-  liveIndicator.style.display="block";
-  document.getElementById("startBtn").disabled=true;
-  document.getElementById("stopBtn").disabled=false;
-};
+  recordedChunks = [];
+  const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+  try{
+    recorder = new MediaRecorder(canvasStream, options);
+  }catch(e){
+    // fallback
+    recorder = new MediaRecorder(canvasStream);
+  }
+  recorder.ondataavailable = e => { if(e.data && e.data.size) recordedChunks.push(e.data); };
+  recorder.onstop = onRecordingStopped;
+  recorder.start(1000); // timeslice
 
-document.getElementById("stopBtn").onclick = ()=>{
-  recording=false;
-  liveIndicator.style.display="none";
-  mediaRecorder.stop();
-  document.getElementById("startBtn").disabled=false;
-  document.getElementById("stopBtn").disabled=true;
-};
+  isRecording = true;
+  startTime = Date.now();
+  liveIndicator.style.display = 'inline-block';
+  recordBtn.disabled = true;
+  stopBtn.disabled = false;
+  openCamBtn.disabled = true;
 
-function saveVideo() {
-  const blob = new Blob(recordedChunks, { type:"video/webm" });
+  updateButtons();
+}
+
+async function stopRecording(){
+  if(!isRecording) return;
+  recorder.stop();
+  isRecording = false;
+  liveIndicator.style.display = 'none';
+  recordBtn.disabled = false;
+  stopBtn.disabled = true;
+  openCamBtn.disabled = false;
+  startTime = null;
+
+  // stop camera (per requirement: after "Kết thúc" thì lưu và tắt camera)
+  if(camStream){
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+}
+
+function onRecordingStopped(){
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href=url;
-  a.download="pickleball_recording.webm";
-  a.click();
-  URL.revokeObjectURL(url);
+  dlWebm.href = url; dlWebm.style.display = 'inline-block';
+  // start conversion to MP4
+  convertWebmToMp4(blob).catch(err=>{
+    console.error('Convert failed', err);
+    alert('Chuyển MP4 thất bại — bạn vẫn có thể tải WebM.');
+  });
 }
 
-document.getElementById("captureBtn").onclick = ()=>{
-  const a = document.createElement("a");
-  a.href = canvas.toDataURL("image/png");
-  a.download="capture.png";
+/* -----------------------
+   Snapshot
+------------------------*/
+function snap(){
+  if(!canvas.width) return alert('Chưa có khung hình');
+  const data = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = data; a.download = `${state.A.name}_vs_${state.B.name}_frame.png`;
   a.click();
-};
+}
 
-// chạy
-initCamera();
+/* -----------------------
+   ffmpeg.wasm convert
+------------------------*/
+const { createFFmpeg, fetchFile } = FFmpeg;
+const ffmpeg = createFFmpeg({ log:true,
+  progress: p=>{
+    if(typeof p?.ratio === 'number'){
+      progressBox.style.display = 'block';
+      progPercent.textContent = `${Math.floor(p.ratio*100)}%`;
+    }
+  }
+});
+let ffmpegLoaded = false;
+
+async function ensureFFmpeg(){
+  if(ffmpegLoaded) return;
+  await ffmpeg.load();
+  ffmpegLoaded = true;
+}
+
+async function convertWebmToMp4(webmBlob){
+  try{
+    await ensureFFmpeg();
+    // write file
+    ffmpeg.FS('writeFile', 'in.webm', await fetchFile(webmBlob));
+    // Try H.264 encode (yuv420p for iOS compatibility)
+    // Note: libx264 may increase processing time; if not available in build, command may fail.
+    // We'll try libx264 then fallback to mpeg4 if error.
+    try{
+      await ffmpeg.run('-i','in.webm','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p','-movflags','faststart','-c:a','aac','-b:a','128k','out.mp4');
+    }catch(e){
+      console.warn('libx264 failed, fallback to mpeg4', e);
+      await ffmpeg.run('-i','in.webm','-c:v','mpeg4','-q:v','5','-c:a','aac','-b:a','128k','out.mp4');
+    }
+    const data = ffmpeg.FS('readFile','out.mp4');
+    const mp4Blob = new Blob([data.buffer], { type:'video/mp4' });
+    const url = URL.createObjectURL(mp4Blob);
+    dlMp4.href = url; dlMp4.style.display = 'inline-block';
+    progressBox.style.display = 'none';
+    // cleanup FS
+    try{ ffmpeg.FS('unlink','in.webm'); ffmpeg.FS('unlink','out.mp4'); }catch(e){}
+  }catch(err){
+    progressBox.style.display = 'none';
+    console.error(err);
+    throw err;
+  }
+}
+
+/* -----------------------
+   Wiring event listeners
+------------------------*/
+openCamBtn.addEventListener('click', openCamera);
+resolutionEl.addEventListener('change', ()=>{
+  // reopen camera with new resolution
+  openCamera();
+});
+
+recordBtn.addEventListener('click', startRecording);
+stopBtn.addEventListener('click', stopRecording);
+snapBtn.addEventListener('click', snap);
+
+nameA.addEventListener('input', updateTitles);
+nameB.addEventListener('input', updateTitles);
+tournamentEl.addEventListener('input', ()=>{ /* canvas will read value each frame */ });
+
+chooseServerBtn.addEventListener('click', chooseInitialServerFlow);
+
+serveAplus.addEventListener('click', ()=>{ addServe('A'); updateScorePreview(); updateButtons(); });
+serveAminus.addEventListener('click', ()=>{ subServe('A'); updateScorePreview(); updateButtons(); });
+serveBplus.addEventListener('click', ()=>{ addServe('B'); updateScorePreview(); updateButtons(); });
+serveBminus.addEventListener('click', ()=>{ subServe('B'); updateScorePreview(); updateButtons(); });
+
+scoreAplus.addEventListener('click', ()=>{ addPoint('A'); updateScorePreview(); });
+scoreAminus.addEventListener('click', ()=>{ subPoint('A'); updateScorePreview(); });
+scoreBplus.addEventListener('click', ()=>{ addPoint('B'); updateScorePreview(); });
+scoreBminus.addEventListener('click', ()=>{ subPoint('B'); updateScorePreview(); });
+
+/* On load */
+updateTitles();
+updateButtons();
+
+// Auto-open camera by default (as you requested earlier)
+openCamera();
+
+})(); // IIFE
 </script>
 </body>
 </html>
